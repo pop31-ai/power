@@ -170,26 +170,28 @@ function getPhysicsTask(n){
 
   const needBlocks=Math.max(0,minMA-1);
   const nMov=nBlocks-Math.ceil(nBlocks/2);
+  const nFix=nBlocks-nMov;
   const descLines=minMA<=1?[
-    `Груз весит ${w}кг. Вы можете тянуть с силой ${pull}кг.`,
-    `Сила тяги равна весу груза — МА = 1x уже достаточно.`,
-    `Протяните канат от A до B, используя блоки для направления.`
+    `Груз весит ${w}кг. Сила тяги ${pull}кг равна весу — МА = 1x.`,
+    `Блоки нужны для направления каната: канат идёт от A, через блоки на мачте, к точке B на палубе.`,
+    `Протяните канат от A через хотя бы один блок к B.`
   ]:[
     `Груз весит ${w}кг. Вы можете тянуть с силой ${pull}кг.`,
     `Сила тяги (${pull}кг) < вес груза (${w}кг) — нужен полиспаст.`,
-    `Нужно МА ≥ ${minMA}x → минимум ${needBlocks} подвижных блоков (Г) из ${nBlocks} доступных.`,
-    `Фиксированные блоки (В) только меняют направление, не добавляют МА.`
+    `Нужно МА ≥ ${minMA}x → протяните канат через ${needBlocks} подвижных блоков (Г) из ${nMov} доступных.`,
+    `Фиксированные блоки (В): ${nFix} шт. — только направление, не добавляют МА.`
   ];
 
   const hintLines=minMA<=1?[
-    `Формула: МА = ${w}кг ÷ ${pull}кг = ${minMA}x — сила достаточна.`,
-    `Просто протяните канат от A до B через любой блок (В) для направления.`
+    `МА = ${w}кг ÷ ${pull}кг = 1x — сила достаточна.`,
+    `Кликните на A, проведите через блок (В или Г) на мачте, кликните на B.`,
+    `Любой блок подходит — даже Г-блок не повредит при МА = 1x.`
   ]:[
     `Формула: МА = ${w}кг ÷ ${pull}кг = ${(w/pull).toFixed(1)}x → округляем вверх → ${minMA}x`,
-    `Важно: только блоки <b>Г</b> (подвижные) добавляют МА. Блоки <b>В</b> — только направляют канат.`,
-    `Каждая петля каната через подвижный блок Г добавляет +1 к МА.`,
-    `Доступных блоков Г: ${nMov}. Нужно минимум ${needBlocks}.`,
-    `Схема: канат от A → через Г → через В → через Г → к B.`
+    `Только блоки <b>Г</b> (зелёные, подвижные) добавляют +1 к МА. Блоки <b>В</b> (синие) — только направляют.`,
+    `Канат: A → через Г → через В → через Г → ... → B.`,
+    `Г-блоков на канате: ${nMov} доступно, нужно минимум ${needBlocks}.`,
+    `Цепи (пунктир) покажут какие Г-блоки привязаны к грузу.`
   ];
 
   return{
@@ -276,7 +278,8 @@ function loadLevel(n){
   document.getElementById('pTask').textContent=LV.goal;
   document.getElementById('pDesc').textContent=LV.desc;
   document.getElementById('pFormula').textContent='📐 '+LV.formula;
-  document.getElementById('pData').innerHTML=`Груз: <b>${cargoWeight}кг</b> · Сила: <b>${pullForce}кг</b> · Нужно МА: <b>${LV.need}x</b> · Блоков: <b>${LV.nBlocks}</b>`;
+  const nFixData=Math.ceil(LV.nBlocks/2);
+  document.getElementById('pData').innerHTML=`Груз: <b>${cargoWeight}кг</b> · Сила: <b>${pullForce}кг</b> · МА: <b>${LV.need}x</b> · В: <b>${nFixData}</b> · Г: <b>${LV.nBlocks-nFixData}</b>`;
   document.getElementById('pHint').style.display='none';
   document.getElementById('overlay').style.opacity='0';
   document.getElementById('win').style.opacity='0';

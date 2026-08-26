@@ -22,7 +22,7 @@ canvas{display:block}
 #panel .diagram .pulley{width:14px;height:14px;border:2px solid #6a8;border-radius:50%;position:absolute}
 #panel .diagram .rope{position:absolute;height:2px;background:#c09040;transform-origin:left center}
 #info{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:9px;opacity:.3;pointer-events:none;z-index:2;white-space:nowrap}
-#overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;pointer-events:none;z-index:5;transition:opacity .3s}
+#overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;cursor:pointer;z-index:5;transition:opacity .3s}
 #overlay h1{font-size:34px;text-shadow:0 0 30px rgba(0,160,255,.5);margin-bottom:4px}
 #overlay p{font-size:12px;opacity:.5;line-height:1.5}
 #menu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;background:rgba(4,10,20,.97);padding:14px 20px;border-radius:8px;border:1px solid #1a3050;max-height:90vh;overflow-y:auto;min-width:300px;max-width:420px;display:none}
@@ -93,6 +93,7 @@ let particles=[],stars=[];
 let cargoWeight=50,pullForce=50;
 let hintShown=false;
 let attempts=0;
+let longPressTimer=null;
 
 function initStars(){stars=[];for(let i=0;i<50;i++)stars.push({x:Math.random()*W,y:Math.random()*H*.3,r:.2+Math.random()*.7,a:Math.random()*6.28,s:.002+Math.random()*.005})}
 initStars();
@@ -413,7 +414,11 @@ document.getElementById('win').addEventListener('click',e=>{
 });
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='m'||e.key==='M'){const m=document.getElementById('menu');m.style.display==='none'||!m.style.display?showMenu():hideMenu()}
+  if(e.key==='m'||e.key==='M'){
+    const m=document.getElementById('menu');
+    if(m.style.display==='none'||!m.style.display){showMenu();gameOn='menu'}
+    else{hideMenu();if(curLv)gameOn=true}
+  }
   if(e.key==='h'||e.key==='H'){const h=document.getElementById('help');h.style.display==='none'||!h.style.display?showHelp():hideHelp()}
   if(e.key===' '&&curLv){e.preventDefault();loadLevel(curLv)}
 });
@@ -424,10 +429,11 @@ cv.addEventListener('mousedown',e=>{aud();oDown(e)});
 cv.addEventListener('mousemove',e=>oMove(e));
 cv.addEventListener('mouseup',e=>oUp(e));
 cv.addEventListener('contextmenu',e=>{e.preventDefault();if(cRope.length>0){cRope.pop();snd(300,.04,'sine',.04)}});
-cv.addEventListener('touchstart',e=>{e.preventDefault();aud();oDown(e)},{passive:false});
-cv.addEventListener('touchmove',e=>{e.preventDefault();oMove(e)},{passive:false});
-cv.addEventListener('touchend',e=>{e.preventDefault();oUp(e)},{passive:false});
+cv.addEventListener('touchstart',e=>{e.preventDefault();aud();longPressTimer=setTimeout(()=>{if(cRope.length>0){cRope.pop();snd(300,.04,'sine',.04)}},400);oDown(e)},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();clearTimeout(longPressTimer);oMove(e)},{passive:false});
+cv.addEventListener('touchend',e=>{e.preventDefault();clearTimeout(longPressTimer);oUp(e)},{passive:false});
 cv.addEventListener('click',()=>{if(!gameOn){showMenu();gameOn='menu'}});
+document.getElementById('overlay').addEventListener('click',()=>{if(!gameOn){showMenu();gameOn='menu'}});
 
 function near(p,list,r){let b=-1,bd=r;list.forEach((a,i)=>{const d=Math.hypot(p.x-a.x,p.y-a.y);if(d<bd){bd=d;b=i}});return b}
 
@@ -461,7 +467,7 @@ function oDown(e){
   }
   const bc=LV.blk.map(b=>({x:b.x+b.w/2,y:b.y+b.h/2}));
   const bi=near(p,bc,32);
-  if(bi>=0){
+  if(bi>=0&&cRope.length>0){
     const b=LV.blk[bi];
     cRope.push({x:b.x+b.w/2,y:b.y+b.h/2,bi,bl:true});
     dragging=true;snd(500,.05,'sine',.06);return;

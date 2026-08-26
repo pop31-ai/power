@@ -282,11 +282,13 @@ function calcF(){
     LV.blk.forEach((b,bi)=>{
       if(used.has(bi)||b.tp!=='h')return;
       for(let i=0;i<r.length;i++){
-        if(Math.hypot(r[i].x-b.x-b.w/2,r[i].y-b.y-b.h/2)<b.r+22){used.add(bi);nBlocksUsed++;break}
+        if(Math.hypot(r[i].x-b.x-b.w/2,r[i].y-b.y-b.h/2)<b.r+22){used.add(bi);nBlocksUsed++;snd(880,.12,'sine',.05);break}
       }
     });
   });
+  const old=force;
   force=Math.max(1,1+nBlocksUsed);
+  if(force>old&&force>=LV.need)snd(1047,.15,'triangle',.08);
   document.getElementById('hMA').textContent=force;
   checkWin();
 }
@@ -334,6 +336,8 @@ function showHelp(){
       <div class="key">Space — начать заново</div>
       <div class="key">M — меню · H — справка</div>
     </div>
+    <h3>Цвета блоков</h3>
+    <p><span style="color:#6d6">■ Г</span> (зелёный) — подвижный, добавляет МА · <span style="color:#88b">■ В</span> (синий) — фиксированный, только направление</p>
     <h3>Цвет каната</h3>
     <p><span style="color:#5a5">Зелёный</span> = мало · <span style="color:#da3">Жёлтый</span> = норма · <span style="color:#a33">Красный</span> = макс. блоков</p>
     <div class="close" onclick="document.getElementById('help').style.display='none'">Понятно</div>`;
@@ -345,7 +349,10 @@ function showMenu(){
   const m=document.getElementById('menu');
   let h='<h1>⚓ Rig Master</h1><h2>100 задач по механике · рычаги · полиспасты</h2>';
   CATS.forEach(([a,b,nm])=>{
-    h+=`<div class="cat">${nm} (${a}-${b})</div><div class="row">`;
+    let catDone=0;for(let i=a;i<=b;i++)if(done.has(i))catDone++;
+    const pct=Math.round(catDone/10*100);
+    const bar=pct>0?` <span style="color:${pct>=100?'#5f5':pct>=50?'#da3':'#668'};font-size:7px">[${pct}%]</span>`:'';
+    h+=`<div class="cat">${nm} (${a}-${b})${bar}</div><div class="row">`;
     for(let i=a;i<=b;i++){
       const ok=done.has(i),av=i===1||done.has(i-1),st=stars2.has(i);
       h+=`<div class="b ${ok?'ok':av?'':'no'}" data-l="${i}">${i}${st?'<span class="s">★</span>':''}</div>`;
@@ -504,12 +511,18 @@ function drawShip(){
 
 function drawBlock(b){
   X.save();X.translate(b.x+b.w/2,b.y+b.h/2);
+  const isG=b.tp==='h';
+  const nearRope=ropes.some(r=>r.some(p=>Math.hypot(p.x-b.x-b.w/2,p.y-b.y-b.h/2)<b.r+24));
   X.beginPath();X.roundRect(-b.w/2,-b.h/2,b.w,b.h,2);
-  X.fillStyle='#222230';X.fill();  X.strokeStyle=force>=LV.need?'#5a5':'#555568';X.lineWidth=1.5;X.stroke();
-  X.beginPath();X.arc(0,0,b.r,0,Math.PI*2);X.strokeStyle='#6a6a7a';X.lineWidth=1.5;X.stroke();
-  X.beginPath();X.arc(0,0,2,0,Math.PI*2);X.fillStyle='#999';X.fill();
-  X.fillStyle='#5a7a9a';X.font='7px sans-serif';X.textAlign='center';
-  X.fillText(b.tp==='v'?'В':'Г',0,b.h/2+8);
+  X.fillStyle=isG?(nearRope?'#1a3a1a':'#1a2a1a'):(nearRope?'#1a1a3a':'#1a1a2a');
+  X.fill();
+  X.strokeStyle=isG?(nearRope?'#5f5':'#3a5a3a'):(nearRope?'#55f':'#3a3a5a');
+  X.lineWidth=1.5;X.stroke();
+  X.beginPath();X.arc(0,0,b.r,0,Math.PI*2);
+  X.strokeStyle=isG?'#4a8':'#6a8';X.lineWidth=1.5;X.stroke();
+  X.beginPath();X.arc(0,0,2,0,Math.PI*2);X.fillStyle=isG?'#6d6':'#88b';X.fill();
+  X.fillStyle=isG?'#6d6':'#88b';X.font='bold 8px sans-serif';X.textAlign='center';
+  X.fillText(isG?'Г':'В',0,b.h/2+9);
   X.restore();
 }
 

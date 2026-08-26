@@ -64,7 +64,7 @@ canvas{display:block}
   <div class="hc">Нужно: <b id="hNeed">?</b>x</div>
   <div class="hc" id="hGBlock">Г: <b>0</b>/<span>0</span></div>
 </div>
-<div id="panel"><div class="task" id="pTask">Загрузка...</div><div class="desc" id="pDesc"></div><div class="formula" id="pFormula"></div><div class="data" id="pData"></div><div class="hint" id="pHint" onclick="showHint()">💡 Подсказка</div></div>
+<div id="panel" style="display:none"><div class="task" id="pTask"></div><div class="desc" id="pDesc"></div><div class="formula" id="pFormula"></div><div class="data" id="pData"></div><div class="hint" id="pHint" onclick="showHint()">💡 Подсказка</div></div>
 <canvas id="c"></canvas>
 <div id="info">ЛКМ: клик на A → через блоки → клик на B · ПКМ: удалить · Space: заново · M: меню · H: справка</div>
 <div id="overlay"><h1>⚓ RIG MASTER</h1><p>100 задач по механике: блоки, полиспасты, тали<br><span style="opacity:.6">нажмите чтобы выбрать задачу</span></p><p style="margin-top:8px;opacity:.3;font-size:10px">H — инструкция · M — меню</p></div>
@@ -279,6 +279,7 @@ function loadLevel(n){
   document.getElementById('hS').textContent=pullForce;
   document.getElementById('hMA').textContent='1';
   document.getElementById('hNeed').textContent=LV.need;
+  document.getElementById('panel').style.display='';
   document.getElementById('pTask').textContent=LV.goal;
   document.getElementById('pDesc').textContent=LV.desc;
   document.getElementById('pFormula').textContent='📐 '+LV.formula;
@@ -513,15 +514,15 @@ function update(){
 
   if(demoMode){
     demoTimer++;
-    if(demoTimer>180&&demoStep===0){
+    if(demoTimer>90&&demoStep===0){
       demoStep=1;demoTimer=0;
     }
-    if(demoStep===1&&demoTimer>60){
-      const a=LV.anch[0],b=LV.blk[0];
-      if(a&&b){cRope=[{x:a.x,y:a.y,ai:0,an:true},{x:b.x+b.w/2,y:b.y+b.h/2,bi:0,bl:true}];dragging=true}
+    if(demoStep===1&&demoTimer>30){
+      const a=LV.anch[0],b=LV.blk.find(bl=>bl.tp==='h')||LV.blk[0];
+      if(a&&b){cRope=[{x:a.x,y:a.y,ai:0,an:true},{x:b.x+b.w/2,y:b.y+b.h/2,bi:LV.blk.indexOf(b),bl:true}];dragging=true}
       demoStep=2;demoTimer=0;
     }
-    if(demoStep===2&&demoTimer>40){
+    if(demoStep===2&&demoTimer>30){
       const b=LV.blk[0],a=LV.anch[1];
       if(b&&a){cRope.push({x:a.x,y:a.y,ai:1,an:true});ropes.push([...cRope]);cRope=[];dragging=false;calcF()}
       demoStep=3;demoTimer=0;
@@ -725,15 +726,19 @@ function draw(){
   if(cRope.length>0)drawRope(cRope,'#ff8');
   drawCargo();drawBar();
   if(demoMode&&LV){
-    const a=LV.anch[0];
-    if(a){
-      const pulse=.5+.5*Math.sin(phase*4);
-      X.save();X.globalAlpha=pulse;
-      X.fillStyle='#ff0';X.font='bold 14px sans-serif';X.textAlign='center';
-      X.fillText('👆 Кликни сюда!',a.x,a.y-28);
-      X.beginPath();X.moveTo(a.x,a.y-18);X.lineTo(a.x-8,a.y-10);X.lineTo(a.x+8,a.y-10);X.closePath();X.fill();
-      X.restore();
+    const pulse=.5+.5*Math.sin(phase*4);
+    X.save();X.globalAlpha=pulse;
+    X.fillStyle='#ff0';X.font='bold 13px sans-serif';X.textAlign='center';
+    if(demoStep===0){
+      const a=LV.anch[0];
+      if(a){X.fillText('👆 Кликни на A',a.x,a.y-28);X.beginPath();X.moveTo(a.x,a.y-18);X.lineTo(a.x-8,a.y-10);X.lineTo(a.x+8,a.y-10);X.closePath();X.fill()}
+    }else if(demoStep===1){
+      X.fillText('Тяни к блоку на мачте →',W/2,40);
+    }else if(demoStep===2){
+      const a=LV.anch[1]||LV.anch[0];
+      if(a){X.fillText('Кликни на B!',a.x,a.y-28);X.beginPath();X.moveTo(a.x,a.y-18);X.lineTo(a.x-8,a.y-10);X.lineTo(a.x+8,a.y-10);X.closePath();X.fill()}
     }
+    X.restore();
   }
   particles.forEach(p=>{
     if(p.text){

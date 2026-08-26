@@ -9,10 +9,14 @@
 body{background:#000;overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh;font-family:'Segoe UI',sans-serif}
 canvas{display:block;border-radius:8px;box-shadow:0 0 40px rgba(255,60,60,0.2)}
 #ui{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;gap:28px;color:#fff;font-size:15px;text-shadow:0 0 8px rgba(255,255,255,0.4);pointer-events:none;z-index:2}
-#overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;pointer-events:none;transition:opacity 0.4s;z-index:3}
+#overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;pointer-events:none;transition:opacity 0.4s;z-index:3;max-width:400px}
 #overlay h1{font-size:42px;margin-bottom:8px;text-shadow:0 0 30px rgba(255,80,40,0.8)}
+#overlay h1.win{color:#0f0;text-shadow:0 0 30px rgba(0,255,0,0.8)}
 #overlay p{font-size:15px;opacity:0.7;line-height:1.7}
 #overlay .hi{color:#ffcc00;font-size:18px;margin-top:6px}
+#overlay .score-line{font-size:20px;color:#ff8844;margin:8px 0}
+#overlay .btn{display:inline-block;margin-top:14px;padding:10px 28px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);border-radius:6px;color:#fff;font-size:14px;pointer-events:auto;cursor:pointer;transition:.2s}
+#overlay .btn:hover{background:rgba(255,255,255,.25)}
 #lvlTxt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#0f0;font-size:34px;font-weight:bold;text-shadow:0 0 20px #0f0;pointer-events:none;opacity:0;transition:opacity 0.3s;z-index:3}
 </style>
 </head>
@@ -31,6 +35,7 @@ const C = document.getElementById('c');
 const X = C.getContext('2d');
 const W = C.width = Math.min(880, window.innerWidth - 30);
 const H = C.height = Math.min(620, window.innerHeight - 30);
+const MAX_LEVEL = 10;
 
 const ui = { sc: document.getElementById('sc'), lv: document.getElementById('lv'), sh: document.getElementById('sh'), hi: document.getElementById('hi'), overlay: document.getElementById('overlay'), lvlTxt: document.getElementById('lvlTxt') };
 
@@ -41,6 +46,7 @@ function sfxPop() { tone(500+Math.random()*300, 0.1, 'sine', 0.1); }
 function sfxShatter() { tone(300, 0.08, 'square', 0.08); tone(600, 0.06, 'square', 0.06); setTimeout(() => tone(900, 0.1, 'sine', 0.06), 40); }
 function sfxDestroy() { tone(200, 0.15, 'sawtooth', 0.1); tone(400, 0.1, 'sine', 0.08); }
 function sfxLevelUp() { [0,80,160].forEach((d,i) => setTimeout(() => tone(400+i*250, 0.2, 'square', 0.08), d)); }
+function sfxVictory() { [0,100,200,300,400].forEach((d,i) => setTimeout(() => tone(300+i*150, 0.3, 'sine', 0.1), d)); }
 function sfxBounce() { tone(800, 0.04, 'sine', 0.05); }
 
 let blocks = [];
@@ -302,6 +308,13 @@ class FloatText {
 
 function addShake(a) { shake.i = Math.max(shake.i, a); }
 
+function spawnBubbles() {
+  const numBub = Math.min(6, 2 + Math.floor(level / 2));
+  for (let i = 0; i < numBub; i++) {
+    bubbles.push(new Bubble());
+  }
+}
+
 function genLevel(lvl) {
   blocks = [];
   bubbles = [];
@@ -309,7 +322,7 @@ function genLevel(lvl) {
   particles = [];
   floats = [];
   shots = 2 + lvl;
-  if (lvl > 3) shots = Math.max(2, shots - 1);
+  if (lvl > 3) shots = Math.max(3, shots - 1);
 
   const cols = Math.min(6, 2 + Math.floor(lvl / 2));
   const rows = Math.min(5, 1 + Math.floor(lvl / 2));
@@ -326,10 +339,7 @@ function genLevel(lvl) {
     }
   }
 
-  const numBub = Math.min(6, 2 + Math.floor(lvl / 2));
-  for (let i = 0; i < numBub; i++) {
-    bubbles.push(new Bubble());
-  }
+  spawnBubbles();
   updateUI();
 }
 
@@ -352,21 +362,46 @@ function checkWin() {
   if (won || gameOver) return;
   const alive = blocks.filter(b => b.alive).length;
   if (alive === 0) {
-    won = true;
-    sfxLevelUp();
-    ui.lvlTxt.textContent = 'LEVEL CLEAR!';
-    ui.lvlTxt.style.opacity = 1;
-    setTimeout(() => { ui.lvlTxt.style.opacity = 0; }, 1500);
-    setTimeout(() => { level++; won = false; genLevel(level); }, 1800);
-  } else if (shots <= 0 && bubbles.filter(b => b.alive).length === 0) {
-    gameOver = true;
-    if (score > hiScore) {
-      hiScore = score;
-      try { localStorage.setItem('shatterHi', hiScore); } catch(e) {}
-      ui.hi.textContent = hiScore;
+    if (level >= MAX_LEVEL) {
+      gameOver = true;
+      won = true;
+      sfxVictory();
+      if (score > hiScore) {
+        hiScore = score;
+        try { localStorage.setItem('shatterHi', hiScore); } catch(e) {}
+        ui.hi.textContent = hiScore;
+      }
+      ui.overlay.innerHTML = `<h1 class="win">🏆 ПОБЕДА!</h1><p class="score-line">Score: ${score}</p><p>Все ${MAX_LEVEL} уровней пройдены!</p><p><span class="hi">Best: ${hiScore}</span></p><div class="btn" onclick="restart()">Играть снова</div>`;
+      ui.overlay.style.opacity = 1;
+      ui.overlay.style.pointerEvents = 'auto';
+    } else {
+      won = true;
+      sfxLevelUp();
+      ui.lvlTxt.textContent = 'LEVEL CLEAR!';
+      ui.lvlTxt.style.opacity = 1;
+      setTimeout(() => { ui.lvlTxt.style.opacity = 0; }, 1500);
+      setTimeout(() => { level++; won = false; genLevel(level); }, 1800);
     }
-    ui.overlay.innerHTML = `<h1>GAME OVER</h1><p>Score: ${score}<br>Level: ${level}<br><span class="hi">Best: ${hiScore}</span><br><br>Click to restart</p>`;
-    ui.overlay.style.opacity = 1;
+  } else if (shots <= 0) {
+    const aliveBubbles = bubbles.filter(b => b.alive).length;
+    if (aliveBubbles === 0) {
+      if (shots <= 0 && alive > 0) {
+        gameOver = true;
+        if (score > hiScore) {
+          hiScore = score;
+          try { localStorage.setItem('shatterHi', hiScore); } catch(e) {}
+          ui.hi.textContent = hiScore;
+        }
+        ui.overlay.innerHTML = `<h1>GAME OVER</h1><p class="score-line">Score: ${score}</p><p>Level: ${level}</p><p><span class="hi">Best: ${hiScore}</span></p><div class="btn" onclick="restart()">Заново</div>`;
+        ui.overlay.style.opacity = 1;
+        ui.overlay.style.pointerEvents = 'auto';
+      }
+    } else {
+      shots += 2;
+      floats.push(new FloatText(W/2, H/2, '+2 BONUS!', '#ffcc00', 18));
+      sfxLevelUp();
+      updateUI();
+    }
   }
 }
 
@@ -389,7 +424,7 @@ function handleClick(e) {
   e.preventDefault();
   ensureAudio();
   if (gameOver) { restart(); return; }
-  if (!started) { started = true; ui.overlay.style.opacity = 0; }
+  if (!started) { started = true; ui.overlay.style.opacity = 0; ui.overlay.style.pointerEvents = 'none'; }
   if (shots <= 0) return;
   const pos = getPos(e);
   for (let i = bubbles.length - 1; i >= 0; i--) {
@@ -405,6 +440,7 @@ function restart() {
   shake = { x:0, y:0, i:0 };
   ui.overlay.innerHTML = '<h1>SHATTER ZONE</h1><p>Кликните по пузырю — он разлетится на осколки<br>Сломайте все квадратики!</p>';
   ui.overlay.style.opacity = 1;
+  ui.overlay.style.pointerEvents = 'none';
   genLevel(1);
 }
 
@@ -426,7 +462,7 @@ function update() {
   shards = shards.filter(s => s.alive);
   particles = particles.filter(p => p.alive);
   floats = floats.filter(f => f.alive);
-  if (!gameOver && started) checkWin();
+  if (!gameOver && started && !won) checkWin();
 }
 
 function draw() {

@@ -10,11 +10,17 @@ body{background:#060e1a;overflow:hidden;display:flex;justify-content:center;alig
 canvas{display:block}
 #hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;gap:6px;padding:5px;font-size:10px;pointer-events:none;z-index:2;flex-wrap:wrap}
 .hc{background:rgba(0,12,28,.88);padding:2px 7px;border-radius:4px;border:1px solid #142840;white-space:nowrap}
-#panel{position:absolute;top:36px;left:50%;transform:translateX(-50%);background:rgba(0,15,30,.92);border:1px solid #1a3050;border-radius:6px;padding:8px 14px;font-size:11px;max-width:500px;text-align:center;z-index:2;line-height:1.5}
+#panel{position:absolute;top:34px;left:50%;transform:translateX(-50%);background:rgba(0,15,30,.93);border:1px solid #1a3050;border-radius:6px;padding:8px 14px;font-size:11px;max-width:520px;width:90%;text-align:center;z-index:2;line-height:1.5}
 #panel .task{color:#fa3;font-weight:bold;font-size:12px}
-#panel .desc{color:#8ab;margin-top:3px}
+#panel .desc{color:#8ab;margin-top:2px;font-size:10px}
+#panel .formula{color:#5f5;font-size:13px;margin:4px 0;font-family:monospace;background:rgba(0,255,0,.05);padding:3px 8px;border-radius:3px;display:inline-block}
 #panel .data{color:#7bf;margin-top:2px;font-size:10px}
 #panel .data b{color:#fff}
+#panel .hint{color:#a86;font-size:9px;margin-top:3px;cursor:pointer;text-decoration:underline;opacity:.6}
+#panel .hint:hover{opacity:1}
+#panel .diagram{margin:4px auto;width:200px;height:50px;position:relative}
+#panel .diagram .pulley{width:14px;height:14px;border:2px solid #6a8;border-radius:50%;position:absolute}
+#panel .diagram .rope{position:absolute;height:2px;background:#c09040;transform-origin:left center}
 #info{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:9px;opacity:.3;pointer-events:none;z-index:2;white-space:nowrap}
 #overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;pointer-events:none;z-index:5;transition:opacity .3s}
 #overlay h1{font-size:34px;text-shadow:0 0 30px rgba(0,160,255,.5);margin-bottom:4px}
@@ -34,8 +40,8 @@ canvas{display:block}
 #menu .cls:hover{background:#2a5080;color:#fff}
 #win{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;z-index:8;opacity:0;transition:opacity .3s;background:rgba(4,10,20,.92);padding:20px 30px;border-radius:10px;border:1px solid #2a5080;pointer-events:none}
 #win h2{font-size:24px;color:#4f4;text-shadow:0 0 16px #0a0;margin-bottom:2px}
-#win p{font-size:11px;opacity:.5}
-#win .next{margin-top:10px;padding:6px 20px;background:#1a5a3a;border:1px solid #2a8a5a;color:#5f5;border-radius:5px;cursor:pointer;font-size:12px;pointer-events:auto}
+#win p{font-size:11px;opacity:.5;line-height:1.5}
+#win .next{margin-top:10px;padding:6px 20px;background:#1a5a3a;border:1px solid #2a8a5a;color:#5f5;border-radius:5px;cursor:pointer;font-size:12px;pointer-events:auto;display:inline-block}
 #win .next:hover{background:#2a8a5a;color:#fff}
 #help{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:15;background:rgba(4,10,20,.97);padding:20px 26px;border-radius:10px;border:1px solid #1a3050;max-height:88vh;overflow-y:auto;min-width:320px;max-width:460px;color:#dde;display:none}
 #help h1{color:#4af;font-size:20px;margin-bottom:6px}
@@ -52,15 +58,14 @@ canvas{display:block}
 <div id="hud">
   <div class="hc"><b id="hLv">1</b>/100</div>
   <div class="hc" id="hCat"></div>
-  <div class="hc">Мassa: <b id="hW">?</b> кг</div>
-  <div class="hc">Моя сила: <b id="hS">?</b> кг</div>
+  <div class="hc">Груз: <b id="hW">?</b>кг</div>
+  <div class="hc">Сила: <b id="hS">?</b>кг</div>
   <div class="hc">МА: <b id="hMA">1</b>x</div>
   <div class="hc">Нужно: <b id="hNeed">?</b>x</div>
-  <div class="hc">Блоки: <b id="hB">0</b></div>
 </div>
-<div id="panel"><div class="task" id="pTask">Загрузка...</div><div class="desc" id="pDesc"></div><div class="data" id="pDate"></div></div>
+<div id="panel"><div class="task" id="pTask">Загрузка...</div><div class="desc" id="pDesc"></div><div class="formula" id="pFormula"></div><div class="data" id="pData"></div><div class="hint" id="pHint" onclick="showHint()">💡 Подсказка</div></div>
 <canvas id="c"></canvas>
-<div id="info">ЛКМ: клик на якорь A → тяни через блоки → клик на якорь B · ПКМ: удалить · Space: заново · M: меню · H: справка</div>
+<div id="info">ЛКМ: клик на A → через блоки → клик на B · ПКМ: удалить · Space: заново · M: меню · H: справка</div>
 <div id="overlay"><h1>⚓ RIG MASTER</h1><p>100 задач по физике: рычаги, полиспасты, блоки<br><span style="opacity:.4">нажмите чтобы начать</span></p><p style="margin-top:8px;opacity:.3;font-size:10px">H — инструкция</p></div>
 <div id="win"><h2>✓ ПРАВИЛЬНО!</h2><p id="winP"></p><div class="next" id="wNext">Следующая задача →</div></div>
 <div id="menu"></div>
@@ -74,18 +79,18 @@ let actx;
 function aud(){if(!actx)try{actx=new(AudioContext||webkitAudioContext)()}catch(e){}if(actx&&actx.state==='suspended')actx.resume()}
 function snd(f,d,t,v){if(!actx)return;try{const o=actx.createOscillator(),g=actx.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.setValueAtTime(v||.08,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}}
 
-let done=new Set();
-let stars2=new Set();
+let done=new Set(),stars2=new Set();
 try{JSON.parse(localStorage.getItem('rmD')||'[]').forEach(i=>done.add(i))}catch(e){}
 try{JSON.parse(localStorage.getItem('rmS')||'[]').forEach(i=>stars2.add(i))}catch(e){}
 function saveD(){try{localStorage.setItem('rmD',JSON.stringify([...done]));localStorage.setItem('rmS',JSON.stringify([...stars2]))}catch(e){}}
 
-let curLv=0,LV=null,gameOn=false,phase=0;
+let curLv=0,LV=null,gameOn=false,phase=0,windPhase=0,wind=0;
 let ropes=[],cRope=[],dragging=false;
-let force=1,tForce=1;
-let complete=false,compT=0;
+let force=1;
+let complete=false;
 let particles=[],stars=[];
 let cargoWeight=50,pullForce=50;
+let hintShown=false;
 
 function initStars(){stars=[];for(let i=0;i<50;i++)stars.push({x:Math.random()*W,y:Math.random()*H*.3,r:.2+Math.random()*.7,a:Math.random()*6.28,s:.002+Math.random()*.005})}
 initStars();
@@ -98,100 +103,89 @@ const CATS=[
   [61,70,'Судовые снасти'],[71,80,'Грузоподъёмные'],[81,90,'Экспертные'],[91,100,'Мастер-задачи']
 ];
 
+const SCENARIOS=[
+  {loc:'палуба',up:'наверх',down:'в трюм',dir:'вверх',rig:'парус'},
+  {loc:'трюм',up:'на палубу',down:'на дно',dir:'вверх',rig:'мачту'},
+  {loc:'борт',up:'к борту',down:'за борт',dir:'к себе',rig:'бушприт'},
+  {loc:'корма',up:'на корму',down:'с кормы',dir:'назад',rig:'руль'},
+  {loc:'нос',up:'на нос',down:'с носа',dir:'вперёд',rig:'стеньгу'}
+];
+
 function getPhysicsTask(n){
   const r=rng(n*31+7);
   const R=(a,b)=>a+r()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1));
+  const sc=SCENARIOS[n%5];
 
-  const tasks=[
-    // 1-10: Простые рычаги — одиночный блок меняет направление
-    {w:50,req:1,b:2,goal:'Переместить бочку 50кг наверх',
-     desc:'Один фиксированный блок меняет направление силы. Подключите канат через 1 блок.',
-     hint:'Фиксированный блок не даёт выигрыша в силе, только меняет направление'},
-    {w:100,req:1,b:3,goal:'Поднять якорь 100кг',
-     desc:'Якорь весит 100кг, вы тянете с усилием 100кг. Направьте канат через блок.',
-     hint:'Фиксированный блок: направление меняется, сила та же'},
-    {w:80,req:1,b:3,goal:'Опустить груз 80кг в трюм',
-     desc:'Груз на палубе, нужно опустить вниз. Блок наверху направит канат.',
-     hint:'Чтобы опустить — канат идёт сверху через блок вниз'},
-    {w:120,req:1,b:4,goal:'Сдвинуть бочку 120кг',
-     desc:'Бочка стоит на месте. Нужно потянуть горизонтально через блок.',
-     hint:'Горизонтальный блок меняет вертикальную тягу на горизонтальную'},
-    {w:60,req:1,b:2,goal:'Поднять парус 60кг',
-     desc:'Парус weighs 60кг. Тянете вниз — парус поднимается.',
-     hint:'Блок сверху мачты: тянешь вниз, парус идёт вверх'},
-    {w:150,req:1,b:4,goal:'Вытащить лодку 150кг',
-     desc:'Шлюпка на весу. Направьте тягу через блок на корме.',
-     hint:'Два блока: один на мачте, один на корме — направляют канат'},
-    {w:90,req:1,b:3,goal:'Подтянуть груз 90кг к борту',
-     desc:'Груз висит за бортом. Нужно подтянуть через блок на палубе.',
-     hint:'Фиксированный блок на борту'},
-    {w:70,req:1,b:2,goal:'Затянуть ванту 70кг',
-     desc:'Ванта провисла. Нужно натянуть через блок на мачте.',
-     hint:'Один блок — меняет направление'},
-    {w:200,req:1,b:5,goal:'Поднять стеньгу 200кг',
-     desc:'Стеньга тяжёлая. Нужен точный маршрут через блоки.',
-     hint:'Несколько блоков для направления'},
-    {w:110,req:1,b:3,goal:'Исправить руль 110кг',
-     desc:'Руль заклинило. Тянем через блок на корме.',
-     hint:'Блок на корме направляет тягу'}
+  const d=Math.floor((n-1)/10);
 
-    // 11-20: Подвижные блоки — 2:1 выигрыш
-    // 21-30: Составные — 3:1, 4:1
-    // ...расширяем через генерацию
-  ];
+  // Физические параметры по категориям
+  let w,pull,minMA,nBlocks;
 
-  if(n<=tasks.length){
-    const t=tasks[n-1];
-    cargoWeight=t.w;
-    pullForce=t.w;
-    tForce=t.req;
-    return{goal:t.goal,desc:t.desc,hint:t.hint,w:t.w,pull:t.w,need:t.req,nBlocks:t.b};
+  if(d===0){
+    // 1-10: Фиксированный блок (только направление)
+    w=RI(30,80); pull=w; minMA=1; nBlocks=RI(1,3);
+  } else if(d===1){
+    // 11-20: Несколько фиксированных блоков (направление + угол)
+    w=RI(40,100); pull=w; minMA=1; nBlocks=RI(2,4);
+  } else if(d===2){
+    // 21-30: Подвижные блоки (2:1)
+    w=RI(80,160); pull=RI(40,60); minMA=2; nBlocks=RI(2,4);
+  } else if(d===3){
+    // 31-40: Тали (3:1)
+    w=RI(100,200); pull=RI(35,60); minMA=3; nBlocks=RI(3,5);
+  } else if(d===4){
+    // 41-50: Полиспасты (4:1)
+    w=RI(150,300); pull=RI(35,55); minMA=4; nBlocks=RI(4,6);
+  } else if(d===5){
+    // 51-60: Составные (5:1 - 6:1)
+    w=RI(200,400); pull=RI(35,55); minMA=RI(4,6); nBlocks=RI(4,7);
+  } else if(d===6){
+    // 61-70: Судовые снасти (5:1 - 7:1)
+    w=RI(250,500); pull=RI(30,50); minMA=RI(5,8); nBlocks=RI(5,8);
+  } else if(d===7){
+    // 71-80: Грузоподъёмные (6:1 - 10:1)
+    w=RI(300,600); pull=RI(30,50); minMA=RI(6,10); nBlocks=RI(6,9);
+  } else if(d===8){
+    // 81-90: Экспертные (8:1 - 12:1)
+    w=RI(400,800); pull=RI(30,45); minMA=RI(8,12); nBlocks=RI(7,10);
+  } else {
+    // 91-100: Мастер (10:1 - 15:1)
+    w=RI(500,1000); pull=RI(25,40); minMA=RI(10,15); nBlocks=RI(8,10);
   }
 
-  // Генерация для уровней 11-100
-  const d=Math.floor((n-1)/10);
-  const diff=d-1;
+  cargoWeight=w; pullForce=pull;
 
-  // Масса груза растёт
-  const baseW=[80,100,120,150,200,250,300,400,500,600];
-  const w=baseW[Math.min(diff,9)]+RI(-20,40);
-  // Сила тяги человека — постоянная ~50-80кг
-  const pull=RI(40,70);
-  // Минимальное МА = ceil(w/pull)
-  const minMA=Math.ceil(w/pull);
-  // Сколько блоков доступно
-  const nBlocks=Math.min(minMA+RI(0,2),10);
-
-  cargoWeight=w;
-  pullForce=pull;
-  tForce=minMA;
-
-  const goalTexts=[
-    `Поднять ${w}кг с усилием ${pull}кг`,
-    `Опустить ${w}кг в трюм`,
-    `Переместить ${w}кг на ${RI(3,15)}м`,
-    `Сдвинуть ${w}кг через палубу`,
-    `Подать ${w}кг на мачту`,
-    `Вытащить ${w}кг из воды`,
-    `Натянуть снасть ${w}кг`,
-    `Поднять ${w}кг через ${nBlocks} блоков`
+  const goalTemplates=[
+    `Поднять ${w}кг ${sc.up}`,
+    `Опустить ${w}кг ${sc.down}`,
+    `Сдвинуть ${w}кг ${sc.dir}`,
+    `Натянуть ${rig()} ${w}кг`,
+    `Переместить ${w}кг через ${sc.loc}`
   ];
 
-  const descTexts=[
-    `Груз ${w}кг. Ваша сила: ${pull}кг. Нужно МА ≥ ${minMA}x. Доступно блоков: ${nBlocks}.`,
-    `Чтобы поднять ${w}кг с силой ${pull}кг, вам нужен полиспаст с ${minMA}:1.`,
-    `Каждый подвижный блок даёт +1 к МА. Протяните канат через ${Math.max(1,minMA-1)} подвижных блока.`,
-    `Формула: МА = кол-во ветвей каната, держащих груз. Нужно ${minMA} ветвей.`,
-    `Подвижный блок крепится к грузу. Фиксированный — к перекладине. Комбинируйте!`,
-    `Тяжёлый груз ${w}кг. Обязательно используйте подвижные блоки для рычага.`,
-    `Снасть весит ${w}кг. Без полиспаста не поднять!`,
-    `Доступно ${nBlocks} блоков. Минимум ${minMA-1} из них должны быть подвижными.`
+  const rig=()=>sc.rig;
+
+  const descLines=[
+    `Груз весит ${w}кг. Вы можете тянуть с силой ${pull}кг.`,
+    `Без рычага/полиспаста: ${pull}кг < ${w}кг — груз не сдвинется.`,
+    `Нужен полиспаст с передаточным числом ≥ ${minMA}:1.`,
+    `Каждый подвижный блок на канате = +1 к механическому преимуществу.`,
+    `Итого нужно ≥ ${Math.max(1,minMA-1)} подвижных блоков из ${nBlocks} доступных.`
+  ];
+
+  const hintLines=[
+    `Формула: МА = ${w}кг ÷ ${pull}кг = ${(w/pull).toFixed(1)}x → округляем вверх → ${minMA}x`,
+    `Канат идёт от груза → подвижный блок → фиксированный → обратно к грузу → ещё подвижный...`,
+    `Каждая "петля" каната через подвижный блок добавляет 1 к МА.`,
+    `Доступных блоков: ${nBlocks}. Минимум ${Math.max(1,minMA-1)} должны быть на пути каната к грузу.`,
+    `Схема: груз → вниз к подвижному → вверх к фиксированному → вниз к подвижному → тянете.`
   ];
 
   return{
-    goal:goalTexts[n%goalTexts.length],
-    desc:descTexts[n%descTexts.length],
-    hint:`Минимальное МА = ${minMA}x (${w}кг ÷ ${pull}кг ≈ ${minMA}). Каждый блок на пути каната к грузу +1 МА.`,
+    goal:goalTemplates[n%goalTemplates.length],
+    desc:descLines.join(' '),
+    formula:`МА = ${w}кг ÷ ${pull}кг = ${(w/pull).toFixed(1)} → ${minMA}x`,
+    hint:hintLines.join('\n'),
     w,pull,need:minMA,nBlocks
   };
 }
@@ -204,11 +198,8 @@ function genLevel(n){
   const ship=[{mastH:120,hasBowsprit:true,hasGaff:true},{mastH:90,hasBowsprit:false,hasGaff:false},{mastH:140,hasBowsprit:true,hasGaff:true},{mastH:100,hasBowsprit:true,hasGaff:false}][n%4];
 
   const nA=Math.min(2+Math.floor(d/2),6);
-
   const anch=[];
-  // Start: груз (на палубе или за бортом)
   anch.push({x:R(60,W*.3),y:H-65+R(-10,10),tp:'start'});
-  // End: куда надо доставить
   anch.push({x:R(W*.65,W-60),y:R(50,180),tp:'end'});
   for(let i=1;i<nA;i++)anch.push({x:R(50,W-50),y:R(80,H-160),tp:'mid'});
 
@@ -226,7 +217,7 @@ function genLevel(n){
 
   const s=anch[0],e=anch[1];
   return{n,cat:Math.min(d,9),blk,anch,ship,
-    goal:task.goal,desc:task.desc,hint:task.hint,
+    goal:task.goal,desc:task.desc,formula:task.formula,hint:task.hint,
     cargo:{x:s.x,y:s.y-20,wt:task.w,tx:e.x,ty:e.y},
     windBase:R(-.3,.3)};
 }
@@ -234,8 +225,8 @@ function genLevel(n){
 function loadLevel(n){
   curLv=n;LV=genLevel(n);
   ropes=[];cRope=[];dragging=false;
-  force=1;
-  complete=false;compT=0;particles=[];gameOn=true;
+  force=1;complete=false;particles=[];gameOn=true;hintShown=false;
+  wind=LV.windBase;
 
   const cc=LV.cargo;
   cargo={x:cc.x,y:cc.y,vx:0,vy:0,wt:cc.wt,r:10+Math.min(cc.wt/25,5),tx:cc.tx,ty:cc.ty};
@@ -248,36 +239,42 @@ function loadLevel(n){
   document.getElementById('hS').textContent=pullForce;
   document.getElementById('hMA').textContent='1';
   document.getElementById('hNeed').textContent=LV.need;
-  document.getElementById('hB').textContent='0';
-
   document.getElementById('pTask').textContent=LV.goal;
   document.getElementById('pDesc').textContent=LV.desc;
-  document.getElementById('pDate').innerHTML=
-    `Вес: <b>${cargoWeight}кг</b> · Ваша сила: <b>${pullForce}кг</b> · Нужно МА: <b>${LV.need}x</b> · Блоков: <b>${LV.nBlocks}</b>`;
-
+  document.getElementById('pFormula').textContent='📐 '+LV.formula;
+  document.getElementById('pData').innerHTML=`Груз: <b>${cargoWeight}кг</b> · Сила: <b>${pullForce}кг</b> · Нужно МА: <b>${LV.need}x</b> · Блоков: <b>${LV.nBlocks}</b>`;
+  document.getElementById('pHint').style.display='none';
   document.getElementById('overlay').style.opacity='0';
   document.getElementById('win').style.opacity='0';
   document.getElementById('win').style.pointerEvents='none';
   hideMenu();hideHelp();
 }
 
+window.showHint=function(){
+  if(!LV||hintShown)return;
+  hintShown=true;
+  const h=document.getElementById('pHint');
+  h.textContent='💡 '+LV.hint;
+  h.style.display='block';
+  h.style.color='#ff8';
+};
+
 let cargo=null;
 
 function calcF(){
-  let f=1;
   let nBlocksUsed=0;
+  const used=new Set();
   ropes.forEach(r=>{
     if(r.length<2)return;
     LV.blk.forEach((b,bi)=>{
+      if(used.has(bi))return;
       for(let i=0;i<r.length;i++){
-        if(Math.hypot(r[i].x-b.x-b.w/2,r[i].y-b.y-b.h/2)<b.r+22){nBlocksUsed++;break}
+        if(Math.hypot(r[i].x-b.x-b.w/2,r[i].y-b.y-b.h/2)<b.r+22){used.add(bi);nBlocksUsed++;break}
       }
     });
   });
-  // МА = 1 + количество уникальных блоков на пути каната
   force=Math.max(1,1+nBlocksUsed);
   document.getElementById('hMA').textContent=force;
-  document.getElementById('hB').textContent=nBlocksUsed;
   checkWin();
 }
 
@@ -285,15 +282,13 @@ function checkWin(){
   if(!cargo||complete||!gameOn)return;
   const d=Math.hypot(cargo.x-cargo.tx,cargo.y-cargo.ty);
   if(d<35&&force>=LV.need){
-    complete=true;compT=-1;
-    done.add(curLv);
-    if(force>=LV.need)stars2.add(curLv);
-    saveD();
+    complete=true;
+    done.add(curLv);if(force>=LV.need)stars2.add(curLv);saveD();
     snd(523,.1,'sine',.08);setTimeout(()=>snd(659,.1,'sine',.08),70);
     setTimeout(()=>snd(784,.15,'sine',.1),140);
-    const ratio=(cargoWeight/pullForce).toFixed(1);
-    document.getElementById('winP').textContent=
-      `МА ${force}x ≥ ${LV.need}x · ${cargoWeight}кг ÷ ${pullForce}кг = ${ratio}:1${stars2.has(curLv)?' ⭐':''}`;
+    document.getElementById('winP').innerHTML=
+      `МА ${force}x ≥ ${LV.need}x — верно!<br>${cargoWeight}кг ÷ ${pullForce}кг = ${(cargoWeight/pullForce).toFixed(1)}:1`+
+      (stars2.has(curLv)?'<br>⭐':'' );
     document.getElementById('win').style.opacity='1';
     document.getElementById('win').style.pointerEvents='auto';
   }
@@ -304,20 +299,21 @@ function showHelp(){
   h.innerHTML=`
     <h1>⚓ Как играть — Rig Master</h1>
     <h3>Суть</h3>
-    <p>Это задачи по физике. Груз весит X кг, вы тянете с силой Y кг. Чтобы его поднять, нужен <b>механическое преимущество (МА)</b> — рычаг или полиспаст.</p>
-    
-    <h3>Формула</h3>
-    <p style="font-size:14px;color:#fa3;margin:6px 0"><b>МА = вес груза ÷ сила тяги</b></p>
-    <p>Если груз 200кг, а вы тянете 50кг → нужно МА = 4x (4 ветви каната).</p>
-    
-    <h3>Как даётся МА</h3>
+    <p>Задачи по механике. Груз весит X кг, вы тянете с силой Y кг. Чтобы поднять груз, нужен <b>рычаг</b> или <b>полиспаст</b>.</p>
+    <h3>Формула механического преимущества</h3>
+    <p style="font-size:14px;color:#5f5;margin:6px 0;font-family:monospace;background:rgba(0,255,0,.05);padding:6px;border-radius:4px;text-align:center">
+      МА = Вес груза ÷ Сила тяги<br>
+      <span style="font-size:11px;opacity:.6">例: 200кг ÷ 50кг = 4x → нужно 4 ветви каната</span>
+    </p>
+    <h3>Типы блоков</h3>
     <ul>
-      <li><b>Фиксированный блок</b> — только меняет направление. МА = 1x.</li>
-      <li><b>Подвижный блок</b> — крепится к грузу. Каждый +1 МА.</li>
-      <li><b>Полиспаст</b> — система из фиксированных и подвижных блоков.</li>
-      <li>Каждый блок, через который проходит канат = +1 к МА.</li>
+      <li><b>Фиксированный</b> (В) — крепится к перекладине. Только меняет направление. МА = 1x.</li>
+      <li><b>Подвижный</b> (Г) — крепится к грузу. Каждый +1 к МА.</li>
+      <li><b>Полиспаст</b> — чередование фиксированных и подвижных блоков.</li>
     </ul>
-    
+    <h3>Как строить полиспаст</h3>
+    <p>Канат: груз → подвижный блок → фиксированный → подвижный → фиксированный → тянете.</p>
+    <p>Каждая петля через подвижный блок = +1 МА. Чем сложнее система — тем легче поднять тяжёлый груз.</p>
     <h3>Управление</h3>
     <div class="keys">
       <div class="key">ЛКМ — клик на A, тяни, клик на B</div>
@@ -325,20 +321,16 @@ function showHelp(){
       <div class="key">Space — начать заново</div>
       <div class="key">M — меню · H — справка</div>
     </div>
-    
     <h3>Цвет каната</h3>
-    <p><span style="color:#5a5">Зелёный</span> = мало блоков · <span style="color:#da3">Жёлтый</span> = норма · <span style="color:#a33">Красный</span> = максимум</p>
-    
-    <h3>Пример</h3>
-    <p>Груз 150кг, сила 50кг → нужно МА ≥ 3x → протяните канат через 2+ блока, чтобы получилось 3 ветви.</p>
-  `;
+    <p><span style="color:#5a5">Зелёный</span> = мало · <span style="color:#da3">Жёлтый</span> = норма · <span style="color:#a33">Красный</span> = макс. блоков</p>
+    <div class="close" onclick="document.getElementById('help').style.display='none'">Понятно</div>`;
   h.style.display='block';
 }
 function hideHelp(){document.getElementById('help').style.display='none'}
 
 function showMenu(){
   const m=document.getElementById('menu');
-  let h='<h1>⚓ Rig Master</h1><h2>100 задач по физике · рычаги · полиспасты</h2>';
+  let h='<h1>⚓ Rig Master</h1><h2>100 задач по механике · рычаги · полиспасты</h2>';
   CATS.forEach(([a,b,nm])=>{
     h+=`<div class="cat">${nm} (${a}-${b})</div><div class="row">`;
     for(let i=a;i<=b;i++){
@@ -348,7 +340,7 @@ function showMenu(){
     h+='</div>';
   });
   h+=`<div class="fo">Решено: ${done.size}/100 · Звёзд: ${stars2.size}</div>`;
-  h+='<div class="cls" id="mhelp">📖 Инструкция (H)</div>';
+  h+='<div class="cls" onclick="hideMenu();showHelp()">📖 Инструкция (H)</div>';
   h+='<div class="cls" id="mcls">Играть</div>';
   m.innerHTML=h;m.style.display='block';
 }
@@ -358,26 +350,16 @@ document.getElementById('menu').addEventListener('click',e=>{
   const lv=e.target.closest('[data-l]');
   if(lv)loadLevel(parseInt(lv.dataset.l));
   if(e.target.id==='mcls')hideMenu();
-  if(e.target.id==='mhelp'){hideMenu();showHelp()}
 });
 document.getElementById('win').addEventListener('click',e=>{
   if(e.target.id==='wNext'||e.target.closest('#wNext')){
     if(curLv<100)loadLevel(curLv+1);else showMenu();
   }
 });
-document.getElementById('help').addEventListener('click',e=>{
-  if(e.target.classList.contains('close'))hideHelp();
-});
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='m'||e.key==='M'){
-    const m=document.getElementById('menu');
-    m.style.display==='none'||!m.style.display?showMenu():hideMenu();
-  }
-  if(e.key==='h'||e.key==='H'){
-    const h=document.getElementById('help');
-    h.style.display==='none'||!h.style.display?showHelp():hideHelp();
-  }
+  if(e.key==='m'||e.key==='M'){const m=document.getElementById('menu');m.style.display==='none'||!m.style.display?showMenu():hideMenu()}
+  if(e.key==='h'||e.key==='H'){const h=document.getElementById('help');h.style.display==='none'||!h.style.display?showHelp():hideHelp()}
   if(e.key===' '&&curLv){e.preventDefault();loadLevel(curLv)}
 });
 
@@ -429,31 +411,34 @@ function oUp(){
 }
 
 function update(){
-  phase+=.016;
+  phase+=.016;windPhase+=.008;
+  wind+=Math.sin(windPhase)*.002;
+  wind=Math.max(-1,Math.min(1,wind));
   if(complete)return;
   if(!cargo)return;
 
   let fx=0,fy=0;
+  const weightFactor=Math.max(.1,1-cargoWeight/500);
   ropes.forEach(r=>{
     if(r.length<2)return;
-    const startPt=r[0];
-    const dFromStart=Math.hypot(cargo.x-startPt.x,cargo.y-startPt.y);
-    if(dFromStart>80)return;
-    const endPt=r[r.length-1];
-    const edx=endPt.x-startPt.x,edy=endPt.y-startPt.y;
-    const eLen=Math.hypot(edx,edy);
-    if(eLen>1){
-      const pullStrength=force*.18;
-      fx+=edx/eLen*pullStrength;
-      fy+=edy/eLen*pullStrength;
+    const sp=r[0];
+    const ds=Math.hypot(cargo.x-sp.x,cargo.y-sp.y);
+    if(ds>80)return;
+    const ep=r[r.length-1];
+    const edx=ep.x-sp.x,edy=ep.y-sp.y;
+    const el=Math.hypot(edx,edy);
+    if(el>1){
+      const ps=force*.15*weightFactor;
+      fx+=edx/el*ps;fy+=edy/el*ps;
     }
   });
 
   if(ropes.length>0){
-    fx+=(cargo.tx-cargo.x)*.002*Math.max(1,force*.4);
-    fy+=(cargo.ty-cargo.y)*.002*Math.max(1,force*.4);
+    fx+=(cargo.tx-cargo.x)*.002*force*weightFactor;
+    fy+=(cargo.ty-cargo.y)*.002*force*weightFactor;
   }
-  fy+=.03+Math.sin(phase*2)*.003;
+  fx+=wind*.005;
+  fy+=.02+Math.sin(phase*2)*.002;
   cargo.vx+=fx;cargo.vy+=fy;
   cargo.vx*=.86;cargo.vy*=.86;
   cargo.x+=cargo.vx;cargo.y+=cargo.vy;
@@ -461,7 +446,7 @@ function update(){
   cargo.y=Math.max(cargo.r,Math.min(H-cargo.r,cargo.y));
   checkWin();
 
-  if(Math.random()<.02)particles.push({x:Math.random()*W,y:H-6+Math.random()*8,vx:(Math.random()-.5)*.3,vy:-.15-Math.random()*.2,life:1,r:.4+Math.random()*1.2});
+  if(Math.random()<.02)particles.push({x:Math.random()*W,y:H-6+Math.random()*8,vx:(Math.random()-.5)*.3+wind*.05,vy:-.15-Math.random()*.2,life:1,r:.4+Math.random()*1.2});
   particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life-=.01});
   particles=particles.filter(p=>p.life>0);
 }
@@ -475,7 +460,7 @@ function drawWater(){
   X.fillStyle=g;X.fill();X.restore();
 }
 
-function drawStars(){
+function drawStarsField(){
   stars.forEach(s=>{s.a+=s.s;X.beginPath();X.arc(s.x,s.y,s.r,0,Math.PI*2);
     X.fillStyle=`rgba(170,190,230,${.2+Math.sin(s.a)*.12})`;X.fill()});
 }
@@ -484,15 +469,12 @@ function drawShip(){
   if(!LV)return;
   const sh=LV.ship;
   X.save();
-  const tilt=Math.sin(phase*1.3)*2;
-  X.translate(0,Math.sin(phase)*3);
-  X.rotate(tilt*Math.PI/180);
+  const tilt=Math.sin(phase*1.3)*2+wind*3;
+  X.translate(0,Math.sin(phase)*3);X.rotate(tilt*Math.PI/180);
   const sx=W*.04,sy=H-44,sw=W*.92;
 
-  X.beginPath();X.moveTo(sx+12,sy);
-  X.quadraticCurveTo(sx-5,sy+14,sx+6,sy+32);
-  X.lineTo(sx+sw-6,sy+32);
-  X.quadraticCurveTo(sx+sw+5,sy+14,sx+sw-12,sy);X.closePath();
+  X.beginPath();X.moveTo(sx+12,sy);X.quadraticCurveTo(sx-5,sy+14,sx+6,sy+32);
+  X.lineTo(sx+sw-6,sy+32);X.quadraticCurveTo(sx+sw+5,sy+14,sx+sw-12,sy);X.closePath();
   X.fillStyle='#180c04';X.fill();X.strokeStyle='#342010';X.lineWidth=1.5;X.stroke();
 
   for(let i=0;i<8;i++){const bx=sx+25+i*(sw-50)/7;
@@ -503,11 +485,13 @@ function drawShip(){
   X.beginPath();X.moveTo(mx-40,sy-80);X.lineTo(mx+40,sy-80);X.strokeStyle='#3a2818';X.lineWidth=2;X.stroke();
   X.beginPath();X.moveTo(mx-30,sy-100);X.lineTo(mx+30,sy-100);X.strokeStyle='#3a2818';X.lineWidth=1.5;X.stroke();
 
-  const sb=Math.sin(phase*.7)*5;
+  const sb=Math.sin(phase*.7)*5+wind*12;
   X.beginPath();X.moveTo(mx-35,sy-80);X.quadraticCurveTo(mx+sb,sy-65,mx+35,sy-80);
   X.strokeStyle='rgba(200,180,140,.25)';X.lineWidth=1;X.stroke();
+  X.beginPath();X.moveTo(mx-28,sy-100);X.quadraticCurveTo(mx+sb*.6,sy-92,mx+28,sy-100);
+  X.strokeStyle='rgba(200,180,140,.18)';X.lineWidth=.8;X.stroke();
 
-  if(sh.hasBowsprit)X.beginPath(),X.moveTo(sx+sw-12,sy),X.lineTo(sx+sw+30,sy-35),X.strokeStyle='#3a2818',X.lineWidth=2,X.stroke();
+  if(sh.hasBowsprit){X.beginPath();X.moveTo(sx+sw-12,sy);X.lineTo(sx+sw+30,sy-35);X.strokeStyle='#3a2818';X.lineWidth=2;X.stroke()}
   if(sh.hasGaff){X.beginPath();X.moveTo(mx+5,sy-60);X.lineTo(mx+45,sy-90);X.strokeStyle='#3a2818';X.lineWidth=1.2;X.stroke()}
 
   X.strokeStyle='rgba(100,80,60,.15)';X.lineWidth=.5;
@@ -519,7 +503,7 @@ function drawShip(){
 function drawBlock(b){
   X.save();X.translate(b.x+b.w/2,b.y+b.h/2);
   X.beginPath();X.roundRect(-b.w/2,-b.h/2,b.w,b.h,2);
-  X.fillStyle='#222230';X.fill();X.strokeStyle='#555568';X.lineWidth=1.5;X.stroke();
+  X.fillStyle='#222230';X.fill();X.strokeStyle=force>=LV?.need?'#5a5':'#555568';X.lineWidth=1.5;X.stroke();
   X.beginPath();X.arc(0,0,b.r,0,Math.PI*2);X.strokeStyle='#6a6a7a';X.lineWidth=1.5;X.stroke();
   X.beginPath();X.arc(0,0,2,0,Math.PI*2);X.fillStyle='#999';X.fill();
   X.fillStyle='#5a7a9a';X.font='7px sans-serif';X.textAlign='center';
@@ -554,9 +538,7 @@ function drawRope(r,col){
   X.beginPath();X.moveTo(r[0].x,r[0].y);
   for(let i=1;i<r.length;i++){
     const sag=4+tens*2;
-    const mx=(r[i-1].x+r[i].x)/2;
-    const my=(r[i-1].y+r[i].y)/2+sag;
-    X.quadraticCurveTo(mx,my,r[i].x,r[i].y);
+    X.quadraticCurveTo((r[i-1].x+r[i].x)/2,(r[i-1].y+r[i].y)/2+sag,r[i].x,r[i].y);
   }
   X.stroke();X.shadowBlur=0;
   r.forEach(p=>{X.beginPath();X.arc(p.x,p.y,2,0,Math.PI*2);
@@ -581,31 +563,30 @@ function drawCargo(){
 
 function drawBar(){
   if(!cargo||!LV)return;
-  const bx=8,by=H-38,bw=W-16,bh=4;
+  const bx=8,by=H-34,bw=W-16,bh=4;
   X.fillStyle='rgba(255,255,255,.05)';X.fillRect(bx,by,bw,bh);
   const pct=Math.min(1.5,force/Math.max(1,LV.need));
   X.fillStyle=pct>=1?'rgba(70,255,70,.4)':'rgba(70,150,255,.3)';
   X.fillRect(bx,by,bw*Math.min(1,pct),bh);
   X.fillStyle='#556';X.font='8px sans-serif';X.textAlign='left';
-  X.fillText('МА: '+force+'/'+LV.need+'x',bx,by-3);
+  X.fillText(`МА ${force}/${LV.need}x`,bx,by-3);
 }
 
 function draw(){
   X.fillStyle='#070d18';X.fillRect(0,0,W,H);
-  drawStars();drawWater();drawShip();
+  drawStarsField();drawWater();drawShip();
   if(LV){LV.blk.forEach(drawBlock);LV.anch.forEach(drawAnchor)}
   ropes.forEach(r=>drawRope(r));
   if(cRope.length>0)drawRope(cRope,'#ff8');
   drawCargo();drawBar();
   particles.forEach(p=>{X.beginPath();X.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
     X.fillStyle=`rgba(70,170,240,${p.life*.3})`;X.fill()});
-  if(complete)X.fillStyle=`rgba(0,0,0,.25)`,X.fillRect(0,0,W,H);
+  if(complete)X.fillStyle='rgba(0,0,0,.25)',X.fillRect(0,0,W,H);
 }
 
 function loop(){if(gameOn&&gameOn!=='help')update();draw();requestAnimationFrame(loop)}
 
-showMenu();
-loop();
+showMenu();loop();
 </script>
 </body>
 </html>

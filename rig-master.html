@@ -144,6 +144,7 @@ function getPhysicsTask(n){
   }
 
   minMA=Math.max(1,Math.ceil(w/pull));
+  nBlocks=Math.max(nBlocks,minMA-1);
   if(minMA>nBlocks+1)minMA=nBlocks+1;
 
   cargoWeight=w; pullForce=pull;
@@ -156,20 +157,28 @@ function getPhysicsTask(n){
     `Переместить ${w}кг через ${sc.loc}`
   ];
 
-  const descLines=[
+  const needBlocks=Math.max(0,minMA-1);
+  const nMov=nBlocks-Math.ceil(nBlocks/2);
+  const descLines=minMA<=1?[
     `Груз весит ${w}кг. Вы можете тянуть с силой ${pull}кг.`,
-    `Без рычага/полиспаста: ${pull}кг < ${w}кг — груз не сдвинется.`,
-    `Нужен полиспаст с передаточным числом ≥ ${minMA}:1.`,
-    `Каждый подвижный блок на канате = +1 к механическому преимуществу.`,
-    `Итого нужно ≥ ${Math.max(1,minMA-1)} подвижных блоков из ${nBlocks} доступных.`
+    `Сила тяги равна весу груза — МА = 1x уже достаточно.`,
+    `Протяните канат от A до B, используя блоки для направления.`
+  ]:[
+    `Груз весит ${w}кг. Вы можете тянуть с силой ${pull}кг.`,
+    `Сила тяги (${pull}кг) < вес груза (${w}кг) — нужен полиспаст.`,
+    `Нужно МА ≥ ${minMA}x → минимум ${needBlocks} подвижных блоков (Г) из ${nBlocks} доступных.`,
+    `Фиксированные блоки (В) только меняют направление, не добавляют МА.`
   ];
 
-  const hintLines=[
+  const hintLines=minMA<=1?[
+    `Формула: МА = ${w}кг ÷ ${pull}кг = ${minMA}x — сила достаточна.`,
+    `Просто протяните канат от A до B через любой блок (В) для направления.`
+  ]:[
     `Формула: МА = ${w}кг ÷ ${pull}кг = ${(w/pull).toFixed(1)}x → округляем вверх → ${minMA}x`,
-    `Канат идёт от груза → подвижный блок → фиксированный → обратно к грузу → ещё подвижный...`,
-    `Каждая "петля" каната через подвижный блок добавляет 1 к МА.`,
-    `Доступных блоков: ${nBlocks}. Минимум ${Math.max(1,minMA-1)} должны быть на пути каната к грузу.`,
-    `Схема: груз → вниз к подвижному → вверх к фиксированному → вниз к подвижному → тянете.`
+    `Важно: только блоки <b>Г</b> (подвижные) добавляют МА. Блоки <b>В</b> — только направляют канат.`,
+    `Каждая петля каната через подвижный блок Г добавляет +1 к МА.`,
+    `Доступных блоков Г: ${nMov}. Нужно минимум ${needBlocks}.`,
+    `Схема: канат от A → через Г → через В → через Г → к B.`
   ];
 
   return{
@@ -196,13 +205,26 @@ function genLevel(n){
 
   const blk=[];
   const nB=task.nBlocks;
-  for(let i=0;i<nB;i++){
-    const v=i<Math.ceil(nB/2);
+  const nFix=Math.ceil(nB/2);
+  const nMov=nB-nFix;
+  const beamY=80+R(-10,10);
+  const shipCx=W*.5;
+  for(let i=0;i<nFix;i++){
     blk.push({
-      x:80+i*((W-160)/Math.max(1,nB-1))+R(-20,20),
-      y:R(80,H-200)+Math.sin(i)*40,
-      w:v?10:24,h:v?24:10,r:R(6,10),
-      tp:v?'v':'h'
+      x:shipCx-((nFix-1)*50)/2+i*50+R(-8,8),
+      y:beamY+R(-5,5),
+      w:10,h:24,r:7,
+      tp:'v'
+    });
+  }
+  const cargoStartY=H-120;
+  const beamBottom=beamY+40;
+  for(let i=0;i<nMov;i++){
+    blk.push({
+      x:shipCx-((nMov-1)*60)/2+i*60+R(-10,10),
+      y:beamBottom+(cargoStartY-beamBottom)*((i+1)/(nMov+1))+R(-10,10),
+      w:24,h:10,r:7,
+      tp:'h'
     });
   }
 
@@ -258,7 +280,7 @@ function calcF(){
   ropes.forEach(r=>{
     if(r.length<2)return;
     LV.blk.forEach((b,bi)=>{
-      if(used.has(bi))return;
+      if(used.has(bi)||b.tp!=='h')return;
       for(let i=0;i<r.length;i++){
         if(Math.hypot(r[i].x-b.x-b.w/2,r[i].y-b.y-b.h/2)<b.r+22){used.add(bi);nBlocksUsed++;break}
       }
@@ -298,7 +320,7 @@ function showHelp(){
     </p>
     <h3>Типы блоков</h3>
     <ul>
-      <li><b>Фиксированный</b> (В) — крепится к перекладине. Только меняет направление. МА = 1x.</li>
+      <li><b>Фиксированный</b> (В) — крепится к перекладине. Канат проходит через него для направления, но <b>не добавляет</b> МА.</li>
       <li><b>Подвижный</b> (Г) — крепится к грузу. Каждый +1 к МА.</li>
       <li><b>Полиспаст</b> — чередование фиксированных и подвижных блоков.</li>
     </ul>

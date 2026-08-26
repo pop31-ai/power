@@ -6,487 +6,434 @@
 <title>Rig Master — Морской Блок</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#060e1a;overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh;font-family:'Segoe UI',sans-serif;color:#dde}
+body{background:#060e1a;overflow:hidden;display:flex;justify-content:center;align-items:center;height:100vh;font-family:'Segoe UI',sans-serif;color:#dde;user-select:none}
 canvas{display:block}
-#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;gap:12px;padding:8px;font-size:12px;pointer-events:none;z-index:2}
-.hud-cell{background:rgba(0,15,35,.85);padding:4px 10px;border-radius:5px;border:1px solid #1a3050;white-space:nowrap}
-#info{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:10px;opacity:.4;pointer-events:none;z-index:2;white-space:nowrap}
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;gap:8px;padding:6px;font-size:11px;pointer-events:none;z-index:2}
+.hc{background:rgba(0,12,28,.88);padding:3px 8px;border-radius:4px;border:1px solid #142840;white-space:nowrap}
+#info{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:9px;opacity:.35;pointer-events:none;z-index:2;white-space:nowrap}
 #overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;pointer-events:none;z-index:5;transition:opacity .3s}
-#overlay h1{font-size:32px;text-shadow:0 0 30px rgba(0,160,255,.6);margin-bottom:6px}
-#overlay p{font-size:13px;opacity:.6;line-height:1.6}
-#menu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;background:rgba(4,10,22,.96);padding:20px 28px;border-radius:10px;border:1px solid #1a3050;max-height:88vh;overflow-y:auto;min-width:320px;max-width:440px;display:none}
-#menu h1{color:#4af;font-size:24px;margin-bottom:2px}
-#menu h2{color:#68a;font-size:13px;font-weight:normal;margin-bottom:10px}
-#menu .cat{color:#fa4;font-size:11px;margin-top:6px;text-align:left;font-weight:bold;border-bottom:1px solid #1a2a3a;padding-bottom:2px}
-#menu .row{display:flex;gap:3px;flex-wrap:wrap}
-#menu .b{width:30px;height:28px;background:#0d1a2e;border:1px solid #1a3050;color:#8cf;border-radius:3px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:.12s}
+#overlay h1{font-size:36px;text-shadow:0 0 30px rgba(0,160,255,.5);margin-bottom:4px}
+#overlay p{font-size:12px;opacity:.55;line-height:1.5}
+#menu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;background:rgba(4,10,20,.97);padding:16px 22px;border-radius:8px;border:1px solid #1a3050;max-height:90vh;overflow-y:auto;min-width:310px;max-width:430px;display:none}
+#menu h1{color:#4af;font-size:22px;margin-bottom:1px}
+#menu h2{color:#578;font-size:12px;font-weight:normal;margin-bottom:8px}
+#menu .cat{color:#da3;font-size:10px;margin-top:6px;text-align:left;font-weight:bold;border-bottom:1px solid #1a2a3a;padding-bottom:1px}
+#menu .row{display:flex;gap:2px;flex-wrap:wrap;margin-top:2px}
+#menu .b{width:28px;height:24px;background:#0c1828;border:1px solid #1a3050;color:#7bf;border-radius:2px;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;transition:.1s}
 #menu .b:hover{background:#1a3050;color:#fff}
-#menu .b.ok{background:#0a2a1a;border-color:#2a7a4a;color:#5f5}
-#menu .b.no{opacity:.25;cursor:default;pointer-events:none}
-#menu .info{color:#556;font-size:10px;margin-top:8px}
-#menu .close{margin-top:10px;padding:6px 20px;background:#1a3050;border:1px solid #2a5080;color:#8cf;border-radius:5px;cursor:pointer;font-size:12px;text-align:center}
-#menu .close:hover{background:#2a5080;color:#fff}
+#menu .b.ok{background:#082818;border-color:#2a7a4a;color:#5f5}
+#menu .b.no{opacity:.2;cursor:default;pointer-events:none}
+#menu .fo{color:#445;font-size:9px;margin-top:6px}
+#menu .cls{margin-top:8px;padding:5px 16px;background:#142840;border:1px solid #2a5080;color:#7bf;border-radius:4px;cursor:pointer;font-size:11px;text-align:center}
+#menu .cls:hover{background:#2a5080;color:#fff}
 #win{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;pointer-events:none;z-index:8;opacity:0;transition:opacity .3s}
-#win h2{font-size:28px;color:#4f4;text-shadow:0 0 20px #0a0;margin-bottom:4px}
-#win p{font-size:13px;opacity:.6}
+#win h2{font-size:26px;color:#4f4;text-shadow:0 0 16px #0a0;margin-bottom:3px}
+#win p{font-size:12px;opacity:.55}
+#tip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#ff8;font-size:13px;pointer-events:none;z-index:6;opacity:0;transition:opacity .4s;text-shadow:0 0 10px rgba(255,200,0,.4)}
 </style>
 </head>
 <body>
 <div id="hud">
-  <div class="hud-cell">Задача <b id="hLv">1</b>/100</div>
-  <div class="hud-cell" id="hCat"></div>
-  <div class="hud-cell" id="hGoal"></div>
-  <div class="hud-cell">Сила: <b id="hF">1.0</b>x &rarr; <b id="hFT">1</b>x</div>
+  <div class="hc"><b id="hLv">1</b>/100</div>
+  <div class="hc" id="hCat"></div>
+  <div class="hc" id="hGoal"></div>
+  <div class="hc">Сила <b id="hF">1</b>x/<b id="hFT">1</b>x</div>
+  <div class="hc">Канат: <b id="hR">0</b></div>
 </div>
 <canvas id="c"></canvas>
-<div id="info">ЛКМ: клик на якорь A &rarr; тяни через блоки &rarr; клик на якорь B &middot; ПКМ: удалить канат &middot; Пробел: заново &middot; M: меню</div>
-<div id="overlay"><h1>RIG MASTER</h1><p>Канаты, блоки, лебёдки — 100 морских задач<br><span style="opacity:.5">нажмите для начала</span></p></div>
-<div id="win"><h2>УРОВЕНЬ ПРОЙДЕН!</h2><p id="winP"></p></div>
+<div id="info">ЛКМ: клик на A → через блоки → клик на B · ПКМ: удалить · Space: заново · M: меню</div>
+<div id="overlay"><h1>⚓ RIG MASTER</h1><p>Канаты, блоки, лебёдки — 100 морских задач<br><span style="opacity:.4">нажмите чтобы начать</span></p></div>
+<div id="win"><h2>✓ ПРОЙДЕНО</h2><p id="winP"></p></div>
+<div id="tip"></div>
 <div id="menu"></div>
 <script>
-const C=document.getElementById('c'),X=C.getContext('2d');
-const W=C.width=Math.min(960,innerWidth-10);
-const H=C.height=Math.min(640,innerHeight-10);
+const cv=document.getElementById('c'),X=cv.getContext('2d');
+const W=cv.width=Math.min(960,innerWidth-8);
+const H=cv.height=Math.min(640,innerHeight-8);
 
 let actx;
 function aud(){if(!actx)try{actx=new(AudioContext||webkitAudioContext)()}catch(e){}if(actx&&actx.state==='suspended')actx.resume()}
-function snd(f,d,t,v){if(!actx)return;try{const o=actx.createOscillator(),g=actx.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.setValueAtTime(v||.1,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}}
+function snd(f,d,t,v){if(!actx)return;try{const o=actx.createOscillator(),g=actx.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.setValueAtTime(v||.08,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}}
 
 let done=new Set();
-try{JSON.parse(localStorage.getItem('rmDone')||'[]').forEach(i=>done.add(i))}catch(e){}
-function saveDone(){try{localStorage.setItem('rmDone',JSON.stringify([...done]))}catch(e){}}
+try{JSON.parse(localStorage.getItem('rmD')||'[]').forEach(i=>done.add(i))}catch(e){}
+function saveD(){try{localStorage.setItem('rmD',JSON.stringify([...done]))}catch(e){}}
 
-let curLv=0,lvData=null;
-let ropes=[],curRope=[];
-let dragging=false;
-let force=1,targetF=1;
+let curLv=0,LV=null,gameOn=false,phase=0;
+let ropes=[],cRope=[],dragging=false;
+let force=1,tForce=1;
 let complete=false,compT=0;
-let phase=0;
-let particles=[];
-let stars=[];
-let gameStarted=false;
+let particles=[],stars=[];
 
-let cargo=null;
+function initStars(){stars=[];for(let i=0;i<50;i++)stars.push({x:Math.random()*W,y:Math.random()*H*.3,r:.2+Math.random()*.7,a:Math.random()*6.28,s:.002+Math.random()*.005})}
 
-function initStars(){stars=[];for(let i=0;i<60;i++)stars.push({x:Math.random()*W,y:Math.random()*H*.35,r:.3+Math.random()*.8,a:Math.random()*6.28,s:.003+Math.random()*.006})}
-initStars();
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
-function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-
-const CATEGORIES=[
-  {id:0,name:'Вертикальные блоки',lv:[1,10]},
-  {id:1,name:'Горизонтальные блоки',lv:[11,20]},
-  {id:2,name:'Комбинированные',lv:[21,30]},
-  {id:3,name:'Судовой ремонт',lv:[31,40]},
-  {id:4,name:'Водные операции',lv:[41,50]},
-  {id:5,name:'Много-блокочные',lv:[51,60]},
-  {id:6,name:'Перенаправление',lv:[61,70]},
-  {id:7,name:'Полиспасты',lv:[71,80]},
-  {id:8,name:'Экспертные',lv:[81,90]},
-  {id:9,name:'Мастер',lv:[91,100]}
+const CATS=[
+  [1,10,'Вертикальные блоки'],[11,20,'Горизонтальные'],[21,30,'Комбинированные'],
+  [31,40,'Судовой ремонт'],[41,50,'Водные операции'],[51,60,'Много-блокочные'],
+  [61,70,'Перенаправление'],[71,80,'Полиспасты'],[81,90,'Экспертные'],[91,100,'Мастер']
 ];
 
 const GOALS=[
-  'Поднять груз на палубу','Опустить груз в трюм','Переместить влево','Переместить вправо',
-  'Перекинуть через мачту','Создать рычаг 2:1','Рычаг 3:1','Рычаг 4:1',
-  'Двойной блок','Тройной блок','Квадруполь','Максимальный рычаг',
-  'Поднять 80кг','Опустить 120кг','Сдвинуть с места','Перекатить по палубе',
-  'Через бушприт','На марс-стеньгу','Через гафель','Поднять грот',
-  'Опустить стаксель','Подтянуть брас','Затянуть ванту','Натянуть фалинь',
-  'Ремонт мачты','Чинить корпус','Поднять трап','Исправить руль',
-  'Спуск шлюпки','Подъём якоря','Через корму','На нос',
-  'Синхронно вверх','Синхронно вниз','Два груза','Три груза',
-  'Волноход','Под водой','Кренговка','Выровнять крен',
-  'Подать на борт','Спустить за борт','Из трюма','В трюм',
-  'Компрессия','Разворот 90°','Разворот 180°','Сдвинуть в два',
+  'Поднять груз на палубу','Опустить в трюм','Сдвинуть влево','Сдвинуть вправо',
+  'Через мачту вверх','Рычаг 2:1','Рычаг 3:1','Рычаг 4:1',
+  'Двойной блок','Тройной блок','Четвёрной блок','Максимум рычага',
+  'Поднять 80кг','Опустить 120кг','Сдвинуть бочку','Перекатить бревно',
+  'Через бушприт','На стеньгу','Через гафель','Поднять грот',
+  'Стаксель вниз','Подтянуть брас','Ванта наверх','Фалинь натянуть',
+  'Починить мачту','Ремонт корпуса','Поднять трап','Исправить руль',
+  'Спустить шлюпку','Поднять якорь','Через корму','На нос',
+  'Два груза вверх','Два груза вниз','Два груза в стороны','Три груза',
+  'Под водой','На глубине','Кренговка','Выровнять крен',
+  'Подать на борт','Спустить за борт','Из трюма наверх','В трюм вниз',
+  'Компрессия','Поворот 90°','Поворот 180°','Сдвинуть двойной',
   'Двойной подъём','Тройной подъём','Параллельно','Серийно',
   'Пять блоков','Шесть блоков','Семь блоков','Восемь блоков',
-  '90 градусов','180 градусов','360 петля','Змейка',
-  'Макс. механическое преимущество','Мин. путь','Баланс','Симметрия',
-  'Лево+вертикаль','Право+вертикаль','Оба направления','Центр',
-  'Длинный путь','Короткий путь','Кольцо','Спираль',
-  'Полиспаст 2','Полиспаст 3','Полиспаст 4','Полиспаст 5',
-  '6:1','8:1','10:1','12:1',
-  'Мачта + бушприт','Руль + корпус','Палуба + трюм','Все вместе',
-  'Вертикаль 50м','Горизонталь 50м','Диагональ','Зигзаг',
-  'Максимум блоков','Все якоря','Все типы','Финальный'
+  'Ломаная 90°','Полу-петля','Полная петля','Змейка',
+  'Макс. преимущество','Короткий путь','Баланс грузов','Симметрия',
+  'Лево+вертикаль','Право+вертикаль','Обе стороны','Центр тяжести',
+  'Длинный маршрут','Короткий маршрут','Кольцо','Спираль',
+  'Полиспаст×2','Полиспаст×3','Полиспаст×4','Полиспаст×5',
+  'Передаточное 6:1','Передаточное 8:1','Передаточное 10:1','Передаточное 12:1',
+  'Мачта+бушприт','Руль+палуба','Трюм+палуба','Все вместе',
+  'Вертикальная дистанция','Горизонтальная дистанция','Диагональ','Зигзаг',
+  'Все блоки подряд','Все якоря','Все типы блоков','Финальное испытание'
+];
+
+const TIPS=[
+  'Кликните на зелёный якорь A, протяните канат через блоки к красному B',
+  'Каждый блок, который коснётся каната, увеличивает силу',
+  'Чем больше блоков на пути каната — тем мощнее рычаг',
+  'Правый клик удаляет канат от точки',
+  'Следите за полоской силы внизу экрана'
 ];
 
 function genLevel(n){
-  const rng=mulberry32(n*31+7);
-  const R=(a,b)=>a+rng()*(b-a);
-  const RI=(a,b)=>Math.floor(R(a,b+1));
-  const diff=Math.floor((n-1)/10);
+  const r=rng(n*31+7);
+  const R=(a,b)=>a+r()*(b-a),RI=(a,b)=>Math.floor(R(a,b+1));
+  const d=Math.floor((n-1)/10);
+  const nB=Math.min(2+d,8),nA=Math.min(2+Math.floor(d/2),6);
+  tForce=Math.min(1+d,5+Math.floor(n/8));
 
-  const nBlocks=Math.min(2+diff,8);
-  const nAnchors=Math.min(2+Math.floor(diff/2),6);
-  const tF=Math.min(1+diff,5+Math.floor(n/8));
+  const anch=[];
+  anch.push({x:R(60,W*.3),y:H-65+R(-15,15),tp:'start'});
+  anch.push({x:R(W*.7,W-60),y:R(50,150),tp:'end'});
+  for(let i=1;i<nA;i++)anch.push({x:R(50,W-50),y:R(70,H-150),tp:'mid'});
 
-  const anchors=[];
-  anchors.push({x:R(80,W*.35),y:H-70+R(-20,20),type:'start'});
-  anchors.push({x:R(W*.65,W-80),y:R(60,160),type:'end'});
-  for(let i=1;i<nAnchors;i++){
-    anchors.push({x:R(60,W-60),y:R(80,H-160),type:'mid'});
+  const blk=[];
+  for(let i=0;i<nB;i++){
+    const v=i<Math.ceil(nB/2);
+    blk.push({x:80+i*((W-160)/Math.max(1,nB-1))+R(-15,15),
+      y:R(80,H-180)+Math.sin(i)*35,
+      w:v?10:24,h:v?24:10,r:R(6,10),tp:v?'v':'h'});
   }
 
-  const blocks=[];
-  for(let i=0;i<nBlocks;i++){
-    const isV=i<Math.ceil(nBlocks/2);
-    const bx=100+i*((W-200)/Math.max(1,nBlocks-1))+R(-20,20);
-    const by=R(100,H-200)+Math.sin(i*1.2)*40;
-    blocks.push({x:bx,y:by,w:isV?12:28,h:isV?28:12,r:R(7,12),type:isV?'vert':'horiz'});
-  }
+  const s=anch[0],e=anch[1];
+  return{n,cat:Math.min(d,9),blk,anch,tF:tForce,
+    goal:GOALS[(n-1)%GOALS.length],
+    cargo:{x:s.x,y:s.y-25,wt:RI(20,200),tx:e.x,ty:e.y}};
 
-  const sx=anchors[0].x,sy=anchors[0].y;
-  const ex=anchors[1].x,ey=anchors[1].y;
-
-  return{n,cat:Math.min(diff,9),blocks,anchors,targetF:tF,
-    goal:GOALS[(n-1)%GOALS.length],cargo:{x:sx,y:sy-30,weight:RI(20,200),tx:ex,ty:ey}};
+  // Also generate ship-specific features based on category
 }
 
 function loadLevel(n){
-  curLv=n;lvData=genLevel(n);
-  ropes=[];curRope=[];dragging=false;
-  force=1;targetF=lvData.targetF;
-  complete=false;compT=0;
-  particles=[];gameStarted=true;
+  curLv=n;LV=genLevel(n);
+  ropes=[];cRope=[];dragging=false;
+  force=1;tForce=LV.tF;
+  complete=false;compT=0;particles=[];gameOn=true;
 
-  cargo={x:lvData.cargo.x,y:lvData.cargo.y,vx:0,vy:0,
-    weight:lvData.cargo.weight,r:12+Math.min(lvData.cargo.weight/20,6),
-    tx:lvData.cargo.tx,ty:lvData.cargo.ty};
+  const cc=LV.cargo;
+  cargo={x:cc.x,y:cc.y,vx:0,vy:0,wt:cc.wt,r:10+Math.min(cc.wt/25,5),tx:cc.tx,ty:cc.ty};
 
-  const catInfo=CATEGORIES[lvData.cat];
+  const ci=CATS[LV.cat];
   document.getElementById('hLv').textContent=n;
-  document.getElementById('hCat').textContent=catInfo.name;
-  document.getElementById('hGoal').textContent=lvData.goal;
-  document.getElementById('hFT').textContent=targetF;
-  document.getElementById('hF').textContent='1.0';
+  document.getElementById('hCat').textContent=ci[2];
+  document.getElementById('hGoal').textContent=LV.goal;
+  document.getElementById('hFT').textContent=tForce;
+  document.getElementById('hF').textContent='1';
+  document.getElementById('hR').textContent='0';
 
   document.getElementById('overlay').style.opacity='0';
   document.getElementById('win').style.opacity='0';
+
+  if(n<=3)showTip(TIPS[n-1]);
   hideMenu();
 }
+let cargo=null;
 
-function calcForce(){
+function calcF(){
   let f=1;
   ropes.forEach(r=>{
     if(r.length<2)return;
-    const nearBlocks=new Set();
-    const allBlocks=lvData?lvData.blocks:[];
-    allBlocks.forEach((b,bi)=>{
+    const nb=new Set();
+    LV.blk.forEach((b,bi)=>{
       for(let i=0;i<r.length;i++){
-        const px=r[i].x,py=r[i].y;
-        const cx=b.x+b.w/2,cy=b.y+b.h/2;
-        if(Math.hypot(px-cx,py-cy)<b.r+25)nearBlocks.add(bi);
+        if(Math.hypot(r[i].x-b.x-b.w/2,r[i].y-b.y-b.h/2)<b.r+22)nb.add(bi);
       }
     });
-    f+=nearBlocks.size;
+    f+=nb.size;
   });
   force=Math.max(1,f);
-  document.getElementById('hF').textContent=force.toFixed(1);
+  document.getElementById('hF').textContent=force;
+  document.getElementById('hR').textContent=ropes.length;
   checkWin();
 }
 
 function checkWin(){
-  if(!cargo||complete||!gameStarted)return;
+  if(!cargo||complete||!gameOn)return;
   const d=Math.hypot(cargo.x-cargo.tx,cargo.y-cargo.ty);
-  if(d<30&&force>=Math.max(1,targetF*.7)){
-    complete=true;compT=120;
-    done.add(curLv);saveDone();
-    snd(523,.12,'sine',.1);setTimeout(()=>snd(659,.12,'sine',.1),80);
-    setTimeout(()=>snd(784,.18,'sine',.12),160);
-    document.getElementById('winP').textContent=`Сила: ${force.toFixed(1)}x · Задача ${curLv}/100`;
+  if(d<28&&force>=Math.max(1,Math.floor(tForce*.7))){
+    complete=true;compT=110;
+    done.add(curLv);saveD();
+    snd(523,.1,'sine',.08);setTimeout(()=>snd(659,.1,'sine',.08),70);
+    setTimeout(()=>snd(784,.15,'sine',.1),140);
+    document.getElementById('winP').textContent=`Сила ${force}x · Задача ${curLv}/100`;
     document.getElementById('win').style.opacity='1';
   }
 }
 
+function showTip(t){const e=document.getElementById('tip');e.textContent=t;e.style.opacity='1';setTimeout(()=>e.style.opacity='0',3500)}
 function showMenu(){
   const m=document.getElementById('menu');
   let h='<h1>⚓ Rig Master</h1><h2>100 морских задач с канатами и блоками</h2>';
-  CATEGORIES.forEach(cat=>{
-    h+=`<div class="cat">${cat.name}</div><div class="row">`;
-    for(let i=cat.lv[0];i<=cat.lv[1];i++){
-      const ok=done.has(i);
-      const avail=i===1||done.has(i-1);
-      h+=`<div class="b ${ok?'ok':avail?'':'no'}" data-lv="${i}">${i}</div>`;
+  CATS.forEach(([a,b,nm])=>{
+    h+=`<div class="cat">${nm} (${a}-${b})</div><div class="row">`;
+    for(let i=a;i<=b;i++){
+      const ok=done.has(i),av=i===1||done.has(i-1);
+      h+=`<div class="b ${ok?'ok':av?'':'no'}" data-l="${i}">${i}</div>`;
     }
     h+='</div>';
   });
-  h+=`<div class="info">Решено: ${done.size}/100</div>`;
-  h+='<div class="close" id="menuClose">Закрыть (M)</div>';
+  h+=`<div class="fo">Решено: ${done.size}/100</div>`;
+  h+='<div class="cls" id="mcls">Играть</div>';
   m.innerHTML=h;m.style.display='block';
 }
 function hideMenu(){document.getElementById('menu').style.display='none'}
 
 document.getElementById('menu').addEventListener('click',e=>{
-  if(e.target.classList.contains('b')&&!e.target.classList.contains('no')){
-    const lv=parseInt(e.target.dataset.lv);
-    if(lv)loadLevel(lv);
-  }
-  if(e.target.id==='menuClose')hideMenu();
+  if(e.target.dataset.l)loadLevel(parseInt(e.target.dataset.l));
+  if(e.target.id==='mcls')hideMenu();
 });
 
 document.addEventListener('keydown',e=>{
   if(e.key==='m'||e.key==='M'){
     const m=document.getElementById('menu');
-    if(m.style.display==='none'||!m.style.display)showMenu();else hideMenu();
+    m.style.display==='none'||!m.style.display?showMenu():hideMenu();
   }
   if(e.key===' '&&curLv){e.preventDefault();loadLevel(curLv)}
 });
 
-function getP(e){const r=C.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}}
+function getP(e){const r=cv.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}}
 
-C.addEventListener('mousedown',e=>{aud();onDown(e)});
-C.addEventListener('mousemove',e=>onMove(e));
-C.addEventListener('mouseup',e=>onUp(e));
-C.addEventListener('contextmenu',e=>{e.preventDefault();if(curRope.length>0){curRope.pop();snd(300,.05,'sine',.05)}});
-C.addEventListener('touchstart',e=>{e.preventDefault();aud();onDown(e)},{passive:false});
-C.addEventListener('touchmove',e=>{e.preventDefault();onMove(e)},{passive:false});
-C.addEventListener('touchend',e=>{e.preventDefault();onUp(e)},{passive:false});
+cv.addEventListener('mousedown',e=>{aud();oDown(e)});
+cv.addEventListener('mousemove',e=>oMove(e));
+cv.addEventListener('mouseup',e=>oUp(e));
+cv.addEventListener('contextmenu',e=>{e.preventDefault();if(cRope.length>0){cRope.pop();snd(300,.04,'sine',.04)}});
+cv.addEventListener('touchstart',e=>{e.preventDefault();aud();oDown(e)},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();oMove(e)},{passive:false});
+cv.addEventListener('touchend',e=>{e.preventDefault();oUp(e)},{passive:false});
+cv.addEventListener('click',()=>{if(!gameOn)loadLevel(1)});
 
-C.addEventListener('click',e=>{
-  if(!gameStarted){
-    loadLevel(1);
-  }
-});
+function near(p,list,r){let b=-1,bd=r;list.forEach((a,i)=>{const d=Math.hypot(p.x-a.x,p.y-a.y);if(d<bd){bd=d;b=i}});return b}
 
-function findNear(p,list,r){
-  let best=-1,bestD=r;
-  list.forEach((a,i)=>{
-    const d=Math.hypot(p.x-a.x,p.y-a.y);
-    if(d<bestD){bestD=d;best=i}
-  });
-  return best;
-}
-
-function onDown(e){
+function oDown(e){
   const p=getP(e);
-  if(complete||!gameStarted||!lvData)return;
-
-  const anchors=lvData.anchors;
-  const ai=findNear(p,anchors,20);
+  if(complete||!gameOn||!LV)return;
+  const ai=near(p,LV.anch,20);
   if(ai>=0){
     if(e.button===2||e.ctrlKey){
-      const a=anchors[ai];
-      ropes=ropes.filter(r=>!r.some(pt=>Math.hypot(pt.x-a.x,pt.y-a.y)<10));
-      calcForce();snd(200,.08,'sine',.05);return;
+      const a=LV.anch[ai];
+      ropes=ropes.filter(r=>!r.some(pt=>Math.hypot(pt.x-a.x,pt.y-a.y)<8));
+      calcF();snd(200,.06,'sine',.04);return;
     }
-    curRope=[{x:anchors[ai].x,y:anchors[ai].y,ai,anchored:true}];
-    dragging=true;snd(600,.06,'sine',.08);return;
+    cRope=[{x:LV.anch[ai].x,y:LV.anch[ai].y,ai,an:true}];
+    dragging=true;snd(600,.05,'sine',.06);return;
   }
-
-  const blocks=lvData.blocks;
-  const bCenters=blocks.map(b=>({x:b.x+b.w/2,y:b.y+b.h/2}));
-  const bi=findNear(p,bCenters,28);
+  const bc=LV.blk.map(b=>({x:b.x+b.w/2,y:b.y+b.h/2}));
+  const bi=near(p,bc,26);
   if(bi>=0){
-    const b=blocks[bi];
-    curRope.push({x:b.x+b.w/2,y:b.y+b.h/2,bi,block:true});
-    dragging=true;snd(500,.06,'sine',.08);return;
+    const b=LV.blk[bi];
+    cRope.push({x:b.x+b.w/2,y:b.y+b.h/2,bi,bl:true});
+    dragging=true;snd(500,.05,'sine',.06);return;
   }
 }
 
-function onMove(e){
-  if(!dragging||!curRope.length)return;
-  const p=getP(e);
-  const last=curRope[curRope.length-1];
-  if(!last.anchored){
-    last.x=p.x;last.y=p.y;
-  } else {
-    const d=Math.hypot(p.x-last.x,p.y-last.y);
-    if(d>14)curRope.push({x:p.x,y:p.y});
-  }
+function oMove(e){
+  if(!dragging||!cRope.length)return;
+  const p=getP(e),l=cRope[cRope.length-1];
+  if(!l.an){l.x=p.x;l.y=p.y}
+  else if(Math.hypot(p.x-l.x,p.y-l.y)>12)cRope.push({x:p.x,y:p.y});
 }
 
-function onUp(){
-  if(curRope.length>=2){
-    ropes.push([...curRope]);
-    calcForce();
-    snd(450,.1,'triangle',.07);
-  }
-  curRope=[];dragging=false;
+function oUp(){
+  if(cRope.length>=2){ropes.push([...cRope]);calcF();snd(440,.08,'triangle',.05)}
+  cRope=[];dragging=false;
 }
 
 function update(){
-  phase+=.018;
-
-  if(complete){
-    compT--;
-    if(compT<=0){
-      if(curLv<100)loadLevel(curLv+1);
-      else showMenu();
-    }
-    return;
-  }
-
+  phase+=.016;
+  if(complete){compT--;if(compT<=0){if(curLv<100)loadLevel(curLv+1);else showMenu()}return}
   if(!cargo)return;
 
   let fx=0,fy=0;
   ropes.forEach(r=>{
     for(let i=0;i<r.length-1;i++){
       const dx=r[i+1].x-r[i].x,dy=r[i+1].y-r[i].y;
-      const len=Math.hypot(dx,dy);
-      if(len<1)return;
+      const len=Math.hypot(dx,dy);if(len<1)return;
       const nx=dx/len,ny=dy/len;
-      const d1=Math.hypot(cargo.x-r[i].x,cargo.y-r[i].y);
-      const d2=Math.hypot(cargo.x-r[i+1].x,cargo.y-r[i+1].y);
-      if(d1<70||d2<70){
-        const pull=Math.min(force*.35,2);
-        fx+=nx*pull;fy+=ny*pull;
+      if(Math.hypot(cargo.x-r[i].x,cargo.y-r[i].y)<60||
+         Math.hypot(cargo.x-r[i+1].x,cargo.y-r[i+1].y)<60){
+        fx+=nx*Math.min(force*.3,2);fy+=ny*Math.min(force*.3,2);
       }
     }
   });
 
-  const dt=Math.hypot(cargo.x-cargo.tx,cargo.y-cargo.ty);
-  if(dt>3){
-    fx+=(cargo.tx-cargo.x)*.003*force;
-    fy+=(cargo.ty-cargo.y)*.003*force;
-  }
-
-  fy+=.1;
+  fx+=(cargo.tx-cargo.x)*.003*force;
+  fy+=(cargo.ty-cargo.y)*.003*force;
+  fy+=.09;
   cargo.vx+=fx;cargo.vy+=fy;
-  cargo.vx*=.9;cargo.vy*=.9;
+  cargo.vx*=.89;cargo.vy*=.89;
   cargo.x+=cargo.vx;cargo.y+=cargo.vy;
   cargo.x=Math.max(cargo.r,Math.min(W-cargo.r,cargo.x));
   cargo.y=Math.max(cargo.r,Math.min(H-cargo.r,cargo.y));
-
   checkWin();
 
-  if(Math.random()<.03){
-    particles.push({x:Math.random()*W,y:H-8+Math.random()*10,vx:(Math.random()-.5)*.4,vy:-.2-Math.random()*.3,life:1,r:.5+Math.random()*1.5});
-  }
-  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life-=.012});
+  if(Math.random()<.02)particles.push({x:Math.random()*W,y:H-6+Math.random()*8,vx:(Math.random()-.5)*.3,vy:-.15-Math.random()*.2,life:1,r:.4+Math.random()*1.2});
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life-=.01});
   particles=particles.filter(p=>p.life>0);
 }
 
 function drawWater(){
-  X.save();
-  X.beginPath();
-  X.moveTo(0,H-25);
-  for(let x=0;x<=W;x+=3)X.lineTo(x,H-25+Math.sin(x*.018+phase)*4+Math.sin(x*.009+phase*1.4)*3);
+  X.save();X.beginPath();X.moveTo(0,H-22);
+  for(let x=0;x<=W;x+=3)X.lineTo(x,H-22+Math.sin(x*.02+phase)*3.5+Math.sin(x*.01+phase*1.3)*2.5);
   X.lineTo(W,H);X.lineTo(0,H);X.closePath();
-  const wg=X.createLinearGradient(0,H-30,0,H);
-  wg.addColorStop(0,'rgba(0,50,100,.25)');wg.addColorStop(1,'rgba(0,20,50,.7)');
-  X.fillStyle=wg;X.fill();X.restore();
+  const g=X.createLinearGradient(0,H-28,0,H);
+  g.addColorStop(0,'rgba(0,40,80,.2)');g.addColorStop(1,'rgba(0,18,40,.65)');
+  X.fillStyle=g;X.fill();X.restore();
 }
 
 function drawStars(){
-  stars.forEach(s=>{
-    s.a+=s.s;
-    X.beginPath();X.arc(s.x,s.y,s.r,0,Math.PI*2);
-    X.fillStyle=`rgba(180,200,240,${.25+Math.sin(s.a)*.15})`;X.fill();
-  });
+  stars.forEach(s=>{s.a+=s.s;X.beginPath();X.arc(s.x,s.y,s.r,0,Math.PI*2);
+    X.fillStyle=`rgba(170,190,230,${.2+Math.sin(s.a)*.12})`;X.fill()});
 }
 
 function drawShip(){
-  X.save();
-  const sy=Math.sin(phase)*3;X.translate(0,sy);
-  const sx=W*.05,sy2=H-48,sw=W*.9;
-  X.beginPath();X.moveTo(sx+15,sy2);
-  X.quadraticCurveTo(sx,sy2+12,sx+8,sy2+30);X.lineTo(sx+sw-8,sy2+30);
-  X.quadraticCurveTo(sx+sw,sy2+12,sx+sw-15,sy2);X.closePath();
-  X.fillStyle='#1a0e06';X.fill();X.strokeStyle='#3a2a18';X.lineWidth=1.5;X.stroke();
-  X.beginPath();X.moveTo(sx+25,sy2+1);X.quadraticCurveTo(sx+sw/2,sy2+5,sx+sw-25,sy2+1);
-  X.strokeStyle='#4a3828';X.lineWidth=1;X.stroke();
-  for(let i=0;i<7;i++){
-    const bx=sx+30+i*(sw-60)/6;
-    X.beginPath();X.moveTo(bx,sy2+1);X.lineTo(bx,sy2+26);
-    X.strokeStyle='#2a1a0a';X.lineWidth=.8;X.stroke();
-  }
+  X.save();X.translate(0,Math.sin(phase)*3);
+  const sx=W*.04,sy=H-44,sw=W*.92;
+  // hull
+  X.beginPath();X.moveTo(sx+12,sy);
+  X.quadraticCurveTo(sx-5,sy+14,sx+6,sy+32);
+  X.lineTo(sx+sw-6,sy+32);
+  X.quadraticCurveTo(sx+sw+5,sy+14,sx+sw-12,sy);X.closePath();
+  X.fillStyle='#180c04';X.fill();X.strokeStyle='#342010';X.lineWidth=1.5;X.stroke();
+  // deck planks
+  X.beginPath();X.moveTo(sx+20,sy+1);X.quadraticCurveTo(sx+sw/2,sy+4,sx+sw-20,sy+1);
+  X.strokeStyle='#3a2818';X.lineWidth=.8;X.stroke();
+  for(let i=0;i<8;i++){const bx=sx+25+i*(sw-50)/7;
+    X.beginPath();X.moveTo(bx,sy+1);X.lineTo(bx,sy+28);X.strokeStyle='#201008';X.lineWidth=.6;X.stroke()}
+  // mast
+  const mx=sx+sw*.35;
+  X.beginPath();X.moveTo(mx,sy);X.lineTo(mx,sy-120);X.strokeStyle='#4a3020';X.lineWidth=3;X.stroke();
+  // yard arms
+  X.beginPath();X.moveTo(mx-40,sy-80);X.lineTo(mx+40,sy-80);X.strokeStyle='#3a2818';X.lineWidth=2;X.stroke();
+  X.beginPath();X.moveTo(mx-30,sy-100);X.lineTo(mx+30,sy-100);X.strokeStyle='#3a2818';X.lineWidth=1.5;X.stroke();
+  // sail hint
+  X.beginPath();X.moveTo(mx-35,sy-80);X.quadraticCurveTo(mx,sy-60,mx+35,sy-80);
+  X.strokeStyle='rgba(200,180,140,.25)';X.lineWidth=1;X.stroke();
+  // bowsprit
+  X.beginPath();X.moveTo(sx+sw-12,sy);X.lineTo(sx+sw+30,sy-35);X.strokeStyle='#3a2818';X.lineWidth=2;X.stroke();
+  // rigging lines
+  X.strokeStyle='rgba(100,80,60,.2)';X.lineWidth=.5;
+  X.beginPath();X.moveTo(mx,sy-120);X.lineTo(sx+sw-12,sy);X.stroke();
+  X.beginPath();X.moveTo(mx,sy-120);X.lineTo(sx+12,sy);X.stroke();
   X.restore();
 }
 
 function drawBlock(b){
   X.save();X.translate(b.x+b.w/2,b.y+b.h/2);
-  X.beginPath();X.roundRect(-b.w/2,-b.h/2,b.w,b.h,3);
-  X.fillStyle='#2a2a3a';X.fill();X.strokeStyle='#5a5a6a';X.lineWidth=1.5;X.stroke();
-  X.beginPath();X.arc(0,0,b.r,0,Math.PI*2);
-  X.strokeStyle='#7a7a8a';X.lineWidth=1.5;X.stroke();
-  X.beginPath();X.arc(0,0,2.5,0,Math.PI*2);X.fillStyle='#aaa';X.fill();
-  X.fillStyle='#6a8aaa';X.font='8px sans-serif';X.textAlign='center';
-  X.fillText(b.type==='vert'?'В':'Г',0,b.h/2+9);
+  X.beginPath();X.roundRect(-b.w/2,-b.h/2,b.w,b.h,2);
+  X.fillStyle='#222230';X.fill();X.strokeStyle='#555568';X.lineWidth=1.5;X.stroke();
+  X.beginPath();X.arc(0,0,b.r,0,Math.PI*2);X.strokeStyle='#6a6a7a';X.lineWidth=1.5;X.stroke();
+  X.beginPath();X.arc(0,0,2,0,Math.PI*2);X.fillStyle='#999';X.fill();
+  X.fillStyle='#5a7a9a';X.font='7px sans-serif';X.textAlign='center';
+  X.fillText(b.tp==='v'?'В':'Г',0,b.h/2+8);
   X.restore();
 }
 
-function drawAnchorMark(a){
+function drawAnchor(a){
   X.save();X.translate(a.x,a.y);
-  if(a.type==='start'){
-    X.beginPath();X.arc(0,0,9,0,Math.PI*2);
-    X.fillStyle='rgba(60,200,80,.25)';X.fill();X.strokeStyle='#3a3';X.lineWidth=1.5;X.stroke();
-    X.fillStyle='#3a3';X.font='bold 10px sans-serif';X.textAlign='center';X.textBaseline='middle';X.fillText('A',0,1);
-  } else if(a.type==='end'){
-    X.beginPath();X.arc(0,0,9,0,Math.PI*2);
-    X.fillStyle='rgba(200,60,60,.25)';X.fill();X.strokeStyle='#a33';X.lineWidth=1.5;X.stroke();
-    X.fillStyle='#a33';X.font='bold 10px sans-serif';X.textAlign='center';X.textBaseline='middle';X.fillText('B',0,1);
-  } else {
-    X.beginPath();X.arc(0,0,6,0,Math.PI*2);
-    X.fillStyle='rgba(200,180,60,.2)';X.fill();X.strokeStyle='#aa8';X.lineWidth=1;X.stroke();
+  if(a.tp==='start'){
+    X.beginPath();X.arc(0,0,8,0,Math.PI*2);X.fillStyle='rgba(50,200,70,.2)';X.fill();
+    X.strokeStyle='#3a3';X.lineWidth=1.5;X.stroke();
+    X.fillStyle='#3a3';X.font='bold 9px sans-serif';X.textAlign='center';X.textBaseline='middle';X.fillText('A',0,1);
+  }else if(a.tp==='end'){
+    X.beginPath();X.arc(0,0,8,0,Math.PI*2);X.fillStyle='rgba(200,50,50,.2)';X.fill();
+    X.strokeStyle='#a33';X.lineWidth=1.5;X.stroke();
+    X.fillStyle='#a33';X.font='bold 9px sans-serif';X.textAlign='center';X.textBaseline='middle';X.fillText('B',0,1);
+  }else{
+    X.beginPath();X.arc(0,0,5,0,Math.PI*2);X.fillStyle='rgba(200,180,50,.15)';X.fill();
+    X.strokeStyle='#aa8';X.lineWidth=1;X.stroke();
   }
   X.restore();
 }
 
 function drawRope(r,col){
   if(r.length<2)return;
-  X.save();X.strokeStyle=col||'#c09040';
-  X.lineWidth=2.5;X.lineCap='round';X.lineJoin='round';
-  X.shadowColor='#c09040';X.shadowBlur=3;
+  X.save();X.strokeStyle=col||'#c09040';X.lineWidth=2.5;X.lineCap='round';X.lineJoin='round';
+  // draw with sag
   X.beginPath();X.moveTo(r[0].x,r[0].y);
-  for(let i=1;i<r.length;i++)X.lineTo(r[i].x,r[i].y);
-  X.stroke();X.shadowBlur=0;
-  r.forEach(p=>{
-    X.beginPath();X.arc(p.x,p.y,2.5,0,Math.PI*2);
-    X.fillStyle=p.anchored?'#6d6':p.block?'#8af':'#c09040';X.fill();
-  });
+  for(let i=1;i<r.length;i++){
+    const mx=(r[i-1].x+r[i].x)/2;
+    const my=(r[i-1].y+r[i].y)/2+4; // sag
+    X.quadraticCurveTo(r[i-1].x+(r[i].x-r[i-1].x)*.5,r[i-1].y+(r[i].y-r[i-1].y)*.5+4,r[i].x,r[i].y);
+  }
+  X.stroke();
+  r.forEach(p=>{X.beginPath();X.arc(p.x,p.y,2,0,Math.PI*2);
+    X.fillStyle=p.an?'#5d5':p.bl?'#8bf':'#c09040';X.fill()});
   X.restore();
 }
 
 function drawCargo(){
   if(!cargo)return;
   X.save();X.translate(cargo.x,cargo.y);
-  X.shadowColor=complete?'#4f4':'#f80';X.shadowBlur=complete?15:6;
+  X.shadowColor=complete?'#4f4':'#f80';X.shadowBlur=complete?12:5;
   X.beginPath();X.roundRect(-cargo.r,-cargo.r,cargo.r*2,cargo.r*2,3);
-  X.fillStyle=complete?'#2a4a2a':'#6a4a2a';X.fill();
-  X.strokeStyle=complete?'#5f5':'#ca8';X.lineWidth=1.5;X.stroke();X.shadowBlur=0;
-  X.fillStyle='#ddd';X.font='bold 9px sans-serif';X.textAlign='center';X.textBaseline='middle';
-  X.fillText(cargo.weight+'кг',0,0);
+  X.fillStyle=complete?'#2a4a2a':'#5a3a1a';X.fill();
+  X.strokeStyle=complete?'#5f5':'#b87030';X.lineWidth=1.5;X.stroke();X.shadowBlur=0;
+  X.fillStyle='#ddd';X.font='bold 8px sans-serif';X.textAlign='center';X.textBaseline='middle';
+  X.fillText(cargo.wt+'кг',0,0);
   X.restore();
-  if(cargo.tx!==undefined){
-    X.beginPath();X.arc(cargo.tx,cargo.ty,10+Math.sin(phase*3)*2,0,Math.PI*2);
-    X.strokeStyle=`rgba(255,80,80,${.3+Math.sin(phase*3)*.15})`;
-    X.lineWidth=1.5;X.setLineDash([3,3]);X.stroke();X.setLineDash([]);
-  }
+  // target
+  X.beginPath();X.arc(cargo.tx,cargo.ty,9+Math.sin(phase*3)*2,0,Math.PI*2);
+  X.strokeStyle=`rgba(255,70,70,${.25+Math.sin(phase*3)*.1})`;X.lineWidth=1.5;
+  X.setLineDash([3,3]);X.stroke();X.setLineDash([]);
 }
 
-function drawForceBar(){
+function drawBar(){
   if(!cargo)return;
-  const bx=10,by=H-45,bw=W-20,bh=6;
-  X.fillStyle='rgba(255,255,255,.08)';X.fillRect(bx,by,bw,bh);
-  const pct=Math.min(1,force/Math.max(1,targetF));
-  X.fillStyle=pct>=1?'rgba(80,255,80,.5)':'rgba(80,160,255,.4)';
+  const bx=8,by=H-40,bw=W-16,bh=5;
+  X.fillStyle='rgba(255,255,255,.06)';X.fillRect(bx,by,bw,bh);
+  const pct=Math.min(1,force/Math.max(1,tForce));
+  X.fillStyle=pct>=1?'rgba(70,255,70,.45)':'rgba(70,150,255,.35)';
   X.fillRect(bx,by,bw*pct,bh);
-  X.strokeStyle='rgba(255,255,255,.15)';X.strokeRect(bx,by,bw,bh);
 }
 
 function draw(){
-  X.fillStyle='#080e1a';X.fillRect(0,0,W,H);
+  X.fillStyle='#070d18';X.fillRect(0,0,W,H);
   drawStars();drawWater();drawShip();
-  if(lvData){
-    lvData.blocks.forEach(drawBlock);
-    lvData.anchors.forEach(drawAnchorMark);
-  }
+  if(LV){LV.blk.forEach(drawBlock);LV.anch.forEach(drawAnchor)}
   ropes.forEach(r=>drawRope(r));
-  if(curRope.length>0)drawRope(curRope,'#ff8');
-  drawCargo();drawForceBar();
-  particles.forEach(p=>{
-    X.beginPath();X.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
-    X.fillStyle=`rgba(80,180,255,${p.life*.4})`;X.fill();
-  });
-  if(complete){
-    X.fillStyle=`rgba(0,0,0,${(120-compT)/120*.35})`;X.fillRect(0,0,W,H);
-  }
+  if(cRope.length>0)drawRope(cRope,'#ff8');
+  drawCargo();drawBar();
+  particles.forEach(p=>{X.beginPath();X.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
+    X.fillStyle=`rgba(70,170,240,${p.life*.3})`;X.fill()});
+  if(complete)X.fillStyle=`rgba(0,0,0,${(110-compT)/110*.3})`,X.fillRect(0,0,W,H);
 }
 
-function loop(){if(gameStarted&&!document.getElementById('menu').style.display!=='none')update();draw();requestAnimationFrame(loop)}
+function loop(){if(gameOn)update();draw();requestAnimationFrame(loop)}
 
+initStars();
 showMenu();
 loop();
 </script>

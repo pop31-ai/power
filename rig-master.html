@@ -100,7 +100,7 @@ initStars();
 function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 const CATS=[
-  [1,10,'Простые рычаги'],[11,20,'Фиксированные блоки'],[21,30,'Подвижные блоки'],
+  [1,10,'Направляющие блоки'],[11,20,'Фиксированные блоки'],[21,30,'Подвижные блоки'],
   [31,40,'Блоки-тали'],[41,50,'Полиспасты'],[51,60,'Составные системы'],
   [61,70,'Судовые снасти'],[71,80,'Грузоподъёмные'],[81,90,'Экспертные'],[91,100,'Мастер-задачи']
 ];
@@ -202,8 +202,8 @@ function genLevel(n){
   const nA=Math.min(2+Math.floor(d/2),6);
   const anch=[];
   anch.push({x:R(60,W*.3),y:H-65+R(-10,10),tp:'start'});
-  anch.push({x:R(W*.65,W-60),y:R(50,180),tp:'end'});
-  for(let i=1;i<nA;i++)anch.push({x:R(50,W-50),y:R(80,H-160),tp:'mid'});
+  anch.push({x:R(W*.6,W-60),y:H-65+R(-8,8),tp:'end'});
+  for(let i=1;i<nA;i++)anch.push({x:R(50,W-50),y:R(H-140,H-80),tp:'mid'});
 
   const blk=[];
   const nB=task.nBlocks;
@@ -233,7 +233,7 @@ function genLevel(n){
   const s=anch[0],e=anch[1];
   return{n,cat:Math.min(d,9),blk,anch,ship,
     goal:task.goal,desc:task.desc,formula:task.formula,hint:task.hint,
-    cargo:{x:s.x,y:s.y-20,wt:task.w,tx:e.x,ty:e.y},
+    cargo:{x:s.x,y:s.y-20,wt:task.w,tx:shipCx,ty:beamY+30},
     windBase:R(-.3,.3)};
 }
 
@@ -437,7 +437,15 @@ function oMove(e){
 
 function oUp(){
   if(cRope.length>=2){
+    const prevForce=force;
     ropes.push([...cRope]);calcF();snd(440,.08,'triangle',.05);
+    const vUsed=new Set();
+    ropes.forEach(r=>r.forEach(p=>{if(p.bl&&LV.blk[p.bi]&&LV.blk[p.bi].tp==='v')vUsed.add(p.bi)}));
+    vUsed.forEach(bi=>{
+      const b=LV.blk[bi];
+      particles.push({x:b.x+b.w/2,y:b.y-12,vx:0,vy:-.6,life:1.2,r:0,
+        text:'+0',col:'#88b',font:'bold 10px sans-serif'});
+    });
     if(force<LV.need){
       attempts++;
       if(attempts>=2&&!hintShown)showHint();
@@ -472,7 +480,7 @@ function update(){
   checkWin();
 
   if(Math.random()<.02)particles.push({x:Math.random()*W,y:H-6+Math.random()*8,vx:(Math.random()-.5)*.3+wind*.05,vy:-.15-Math.random()*.2,life:1,r:.4+Math.random()*1.2});
-  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life-=.01});
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life-=p.text?.012:.01});
   particles=particles.filter(p=>p.life>0);
 }
 
@@ -592,6 +600,27 @@ function drawCargo(){
   X.setLineDash([3,3]);X.stroke();X.setLineDash([]);
 }
 
+function drawChains(){
+  if(!cargo||!LV)return;
+  X.save();
+  X.setLineDash([4,4]);
+  X.lineWidth=1;
+  LV.blk.forEach(b=>{
+    if(b.tp!=='h')return;
+    const bx=b.x+b.w/2,by=b.y+b.h/2;
+    const dx=cargo.x-bx,dy=cargo.y-by;
+    const dist=Math.hypot(dx,dy);
+    if(dist<5)return;
+    X.beginPath();X.moveTo(bx,by+b.r+2);
+    X.lineTo(cargo.x,cargo.y-cargo.r-2);
+    const tension=force>=LV.need?.35:.12;
+    X.strokeStyle=force>=LV.need?`rgba(120,200,120,${tension})`:`rgba(150,150,200,${tension})`;
+    X.stroke();
+  });
+  X.setLineDash([]);
+  X.restore();
+}
+
 function drawBar(){
   if(!cargo||!LV)return;
   const bx=8,by=H-34,bw=W-16,bh=4;
@@ -599,19 +628,37 @@ function drawBar(){
   const pct=Math.min(1.5,force/Math.max(1,LV.need));
   X.fillStyle=pct>=1?'rgba(70,255,70,.4)':'rgba(70,150,255,.3)';
   X.fillRect(bx,by,bw*Math.min(1,pct),bh);
+  if(pct>=1){
+    const glow=.3+Math.sin(phase*4)*.15;
+    X.fillStyle=`rgba(70,255,70,${glow})`;
+    X.fillRect(bx+bw,by-1,2,bh+2);
+  }
   X.fillStyle='#556';X.font='8px sans-serif';X.textAlign='left';
-  X.fillText(`МА ${force}/${LV.need}x`,bx,by-3);
+  const tensLabel=force>=LV.need?'НАТЯНУТО':'ТЯГА';
+  X.fillText(`МА ${force}/${LV.need}x · ${tensLabel}`,bx,by-3);
 }
 
 function draw(){
   X.fillStyle='#070d18';X.fillRect(0,0,W,H);
   drawStarsField();drawWater();drawShip();
   if(LV){LV.blk.forEach(drawBlock);LV.anch.forEach(drawAnchor)}
+  drawChains();
   ropes.forEach(r=>drawRope(r));
   if(cRope.length>0)drawRope(cRope,'#ff8');
   drawCargo();drawBar();
-  particles.forEach(p=>{X.beginPath();X.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
-    X.fillStyle=`rgba(70,170,240,${p.life*.3})`;X.fill()});
+  particles.forEach(p=>{
+    if(p.text){
+      X.globalAlpha=Math.min(1,p.life);
+      X.fillStyle=p.col||'#fff';
+      X.font=p.font||'bold 10px sans-serif';
+      X.textAlign='center';X.textBaseline='middle';
+      X.fillText(p.text,p.x,p.y);
+      X.globalAlpha=1;
+    }else{
+      X.beginPath();X.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
+      X.fillStyle=`rgba(70,170,240,${p.life*.3})`;X.fill();
+    }
+  });
   if(complete)X.fillStyle='rgba(0,0,0,.25)',X.fillRect(0,0,W,H);
 }
 

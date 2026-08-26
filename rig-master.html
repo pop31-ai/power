@@ -27,9 +27,28 @@ canvas{display:block}
 #menu .fo{color:#445;font-size:9px;margin-top:5px}
 #menu .cls{margin-top:6px;padding:4px 14px;background:#142840;border:1px solid #2a5080;color:#7bf;border-radius:4px;cursor:pointer;font-size:10px;text-align:center}
 #menu .cls:hover{background:#2a5080;color:#fff}
-#win{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;pointer-events:none;z-index:8;opacity:0;transition:opacity .3s}
+#win{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;z-index:8;opacity:0;transition:opacity .3s;background:rgba(4,10,20,.92);padding:20px 30px;border-radius:10px;border:1px solid #2a5080}
 #win h2{font-size:24px;color:#4f4;text-shadow:0 0 16px #0a0;margin-bottom:2px}
 #win p{font-size:11px;opacity:.5}
+#win .next{margin-top:10px;padding:6px 20px;background:#1a5a3a;border:1px solid #2a8a5a;color:#5f5;border-radius:5px;cursor:pointer;font-size:12px;pointer-events:auto}
+#win .next:hover{background:#2a8a5a;color:#fff}
+#win .toMenu{margin-top:6px;padding:4px 14px;background:#142840;border:1px solid #2a5080;color:#7bf;border-radius:4px;cursor:pointer;font-size:10px;pointer-events:auto}
+#win .toMenu:hover{background:#2a5080;color:#fff}
+#help{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:15;background:rgba(4,10,20,.97);padding:20px 26px;border-radius:10px;border:1px solid #1a3050;max-height:88vh;overflow-y:auto;min-width:320px;max-width:460px;color:#dde}
+#help h1{color:#4af;font-size:20px;margin-bottom:6px}
+#help h3{color:#fa3;font-size:13px;margin-top:10px;margin-bottom:4px}
+#help p,#help li{font-size:11px;opacity:.7;line-height:1.5}
+#help ul{padding-left:16px;margin:4px 0}
+#help li{margin-bottom:3px}
+#help .row{display:flex;gap:10px;margin:10px 0;align-items:center;flex-wrap:wrap}
+#help .demo{flex:1;min-width:120px;height:80px;background:#0a1020;border:1px solid #1a3050;border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative}
+#help .demo .dot{width:12px;height:12px;border-radius:50%;position:absolute}
+#help .demo .blk{width:8px;height:20px;background:#445;border-radius:2px;position:absolute}
+#help .demo .rope{position:absolute;height:2px;background:#c09040;transform-origin:left center}
+#help .close{margin-top:12px;padding:6px 16px;background:#142840;border:1px solid #2a5080;color:#7bf;border-radius:4px;cursor:pointer;font-size:11px;text-align:center}
+#help .close:hover{background:#2a5080;color:#fff}
+#help .keys{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:6px 0}
+#help .key{background:#0c1828;border:1px solid #1a3050;border-radius:3px;padding:3px 6px;font-size:10px;color:#8bf;text-align:center}
 #tip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#ff8;font-size:12px;pointer-events:none;z-index:6;opacity:0;transition:opacity .4s;text-shadow:0 0 10px rgba(255,200,0,.4);max-width:80%;line-height:1.4}
 </style>
 </head>
@@ -43,11 +62,12 @@ canvas{display:block}
   <div class="hc" id="hWind">🌬 0</div>
 </div>
 <canvas id="c"></canvas>
-<div id="info">ЛКМ: A → через блоки → B · ПКМ: удалить · Space: заново · M: меню</div>
-<div id="overlay"><h1>⚓ RIG MASTER</h1><p>Канаты, блоки, лебёдки — 100 морских задач<br><span style="opacity:.4">нажмите чтобы начать</span></p></div>
-<div id="win"><h2>✓ ПРОЙДЕНО</h2><p id="winP"></p></div>
+<div id="info">ЛКМ: A → через блоки → B · ПКМ: удалить · Space: заново · M: меню · H: инструкция</div>
+<div id="overlay"><h1>⚓ RIG MASTER</h1><p>Канаты, блоки, лебёдки — 100 морских задач<br><span style="opacity:.4">нажмите чтобы начать</span></p><p style="margin-top:8px;opacity:.3;font-size:10px">H — инструкция</p></div>
+<div id="win"><h2>✓ ПРОЙДЕНО</h2><p id="winP"></p><div class="next" id="wNext">Следующая задача →</div><div class="toMenu" id="wMenu">В меню</div></div>
 <div id="tip"></div>
 <div id="menu"></div>
+<div id="help"></div>
 <script>
 const cv=document.getElementById('c'),X=cv.getContext('2d');
 const W=cv.width=Math.min(960,innerWidth-8);
@@ -233,10 +253,82 @@ function checkWin(){
     setTimeout(()=>snd(784,.15,'sine',.1),140);
     document.getElementById('winP').textContent=
       `Сила ${force}x · Задача ${curLv}/100${stars2.has(curLv)?' ⭐':''}`;
+    document.getElementById('winP').textContent=
+      `Сила ${force}x · Задача ${curLv}/100${stars2.has(curLv)?' ⭐':''}`;
     document.getElementById('win').style.opacity='1';
+    document.getElementById('win').style.pointerEvents='auto';
   }
 }
 
+function showHelp(){
+  const h=document.getElementById('help');
+  h.innerHTML=`
+    <h1>⚓ Как играть — Rig Master</h1>
+    <h3>Цель</h3>
+    <p>Переместите груз из точки A (зелёная) в точку B (красная), используя канаты и блоки.</p>
+    
+    <h3>Управление</h3>
+    <div class="keys">
+      <div class="key">ЛКМ — начать/закончить канат</div>
+      <div class="key">ПКМ — удалить канат</div>
+      <div class="key">Space — начать уровень заново</div>
+      <div class="key">M — открыть/закрыть меню</div>
+    </div>
+    
+    <h3>Как прокладывать канат</h3>
+    <ul>
+      <li><b>1.</b> Кликните на якорь <span style="color:#3a3">A</span> (зелёный) — начало каната</li>
+      <li><b>2.</b> Ведите мышь через блоки (серые квадратики с кольцами)</li>
+      <li><b>3.</b> Кликните на якорь <span style="color:#a33">B</span> (красный) — конец каната</li>
+      <li>Канат автоматически зафиксируется</li>
+    </ul>
+    
+    <h3>Блоки и рычаги</h3>
+    <ul>
+      <li><b>В</b> — вертикальный блок (перенаправляет силу вверх/вниз)</li>
+      <li><b>Г</b> — горизонтальный блок (перенаправляет силу влево/вправо)</li>
+      <li>Каждый блок на пути каната <b>увеличивает силу рычага</b></li>
+      <li>Чем больше блоков — тем легче двигать тяжёлые грузы</li>
+    </ul>
+    
+    <h3>Сила и натяжение</h3>
+    <ul>
+      <li>Полоса внизу показывает текущую силу (зелёный) и требуемую</li>
+      <li>Канат меняет цвет: <span style="color:#4a4">зелёный</span> → <span style="color:#da3">жёлтый</span> → <span style="color:#a33">красный</span> = максимум</li>
+      <li>Ограничение длины каната показано жёлтой полосой</li>
+    </ul>
+    
+    <h3>Ветер и волны</h3>
+    <ul>
+      <li>Ветер (🌬 в HUD) сдувает груз в сторону</li>
+      <li>Волны качают корабль — учитывайте это!</li>
+    </ul>
+    
+    <h3>Звёзды ⭐</h3>
+    <ul>
+      <li>Звёздa зарабатывается если сила ≥ требуемой</li>
+      <li>Прогресс сохраняется автоматически</li>
+    </ul>
+  `;
+  h.style.display='block';
+}
+function hideHelp(){document.getElementById('help').style.display='none'}
+
+document.getElementById('help').addEventListener('click',e=>{
+  if(e.target.classList.contains('close'))hideHelp();
+});
+document.getElementById('help').addEventListener('dblclick',e=>{
+  if(e.target===document.getElementById('help'))hideHelp();
+});
+
+document.getElementById('win').addEventListener('click',e=>{
+  if(e.target.id==='wNext'){
+    if(curLv<100)loadLevel(curLv+1);else showMenu();
+  }
+  if(e.target.id==='wMenu')showMenu();
+});
+
+let firstPlay=!done.has(1);
 function showTip(t){const e=document.getElementById('tip');e.textContent=t;e.style.opacity='1';setTimeout(()=>e.style.opacity='0',4000)}
 function showMenu(){
   const m=document.getElementById('menu');
@@ -250,6 +342,7 @@ function showMenu(){
     h+='</div>';
   });
   h+=`<div class="fo">Решено: ${done.size}/100 · Звёзд: ${stars2.size}</div>`;
+  h+='<div class="cls" id="mhelp">📖 Инструкция (H)</div>';
   h+='<div class="cls" id="mcls">Играть</div>';
   m.innerHTML=h;m.style.display='block';
 }
@@ -259,12 +352,17 @@ document.getElementById('menu').addEventListener('click',e=>{
   const lv=e.target.closest('[data-l]');
   if(lv)loadLevel(parseInt(lv.dataset.l));
   if(e.target.id==='mcls')hideMenu();
+  if(e.target.id==='mhelp'){hideMenu();showHelp()}
 });
 
 document.addEventListener('keydown',e=>{
   if(e.key==='m'||e.key==='M'){
     const m=document.getElementById('menu');
     m.style.display==='none'||!m.style.display?showMenu():hideMenu();
+  }
+  if(e.key==='h'||e.key==='H'){
+    const h=document.getElementById('help');
+    h.style.display==='none'||!h.style.display?showHelp():hideHelp();
   }
   if(e.key===' '&&curLv){e.preventDefault();loadLevel(curLv)}
 });
@@ -278,7 +376,13 @@ cv.addEventListener('contextmenu',e=>{e.preventDefault();if(cRope.length>0){cRop
 cv.addEventListener('touchstart',e=>{e.preventDefault();aud();oDown(e)},{passive:false});
 cv.addEventListener('touchmove',e=>{e.preventDefault();oMove(e)},{passive:false});
 cv.addEventListener('touchend',e=>{e.preventDefault();oUp(e)},{passive:false});
-cv.addEventListener('click',()=>{if(!gameOn)loadLevel(1)});
+cv.addEventListener('click',()=>{
+  if(!gameOn){
+    if(firstPlay){showHelp();firstPlay=false}
+    else loadLevel(1);
+  }
+});
+cv.addEventListener('dblclick',()=>{if(!gameOn)showHelp()});
 
 function near(p,list,r){let b=-1,bd=r;list.forEach((a,i)=>{const d=Math.hypot(p.x-a.x,p.y-a.y);if(d<bd){bd=d;b=i}});return b}
 
@@ -331,7 +435,7 @@ function update(){
   wind=Math.max(-1,Math.min(1,wind));
   document.getElementById('hWind').textContent='🌬 '+(wind>0?'→':'←')+Math.abs(wind).toFixed(1);
 
-  if(complete){compT--;if(compT<=0){if(curLv<100)loadLevel(curLv+1);else showMenu()}return}
+  if(complete){return}
   if(!cargo)return;
 
   let fx=0,fy=0;

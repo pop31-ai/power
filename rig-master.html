@@ -67,7 +67,7 @@ canvas{display:block}
 <div id="panel"><div class="task" id="pTask">Загрузка...</div><div class="desc" id="pDesc"></div><div class="formula" id="pFormula"></div><div class="data" id="pData"></div><div class="hint" id="pHint" onclick="showHint()">💡 Подсказка</div></div>
 <canvas id="c"></canvas>
 <div id="info">ЛКМ: клик на A → через блоки → клик на B · ПКМ: удалить · Space: заново · M: меню · H: справка</div>
-<div id="overlay"><h1>⚓ RIG MASTER</h1><p>100 задач по физике: рычаги, полиспасты, блоки<br><span style="opacity:.6">нажмите чтобы выбрать задачу</span></p><p style="margin-top:8px;opacity:.3;font-size:10px">H — инструкция · M — меню</p></div>
+<div id="overlay"><h1>⚓ RIG MASTER</h1><p>100 задач по механике: блоки, полиспасты, тали<br><span style="opacity:.6">нажмите чтобы выбрать задачу</span></p><p style="margin-top:8px;opacity:.3;font-size:10px">H — инструкция · M — меню</p></div>
 <div id="win"><h2>✓ ПРАВИЛЬНО!</h2><p id="winP"></p><div class="next" id="wNext">Следующая задача →</div></div>
 <div id="menu"></div>
 <div id="help"></div>
@@ -146,8 +146,11 @@ function getPhysicsTask(n){
   }
 
   minMA=Math.max(1,Math.ceil(w/pull));
-  nBlocks=Math.max(nBlocks,minMA-1);
-  if(minMA>nBlocks+1)minMA=nBlocks+1;
+  minMA=Math.min(minMA,10);
+  const needMov=Math.max(0,minMA-1);
+  nBlocks=Math.max(nBlocks,2*needMov);
+  if(nBlocks<2)nBlocks=2;
+  if(minMA>nBlocks/2+1)minMA=Math.floor(nBlocks/2)+1;
 
   cargoWeight=w; pullForce=pull;
 
@@ -324,7 +327,9 @@ function checkWin(){
     snd(523,.1,'sine',.08);setTimeout(()=>snd(659,.1,'sine',.08),70);
     setTimeout(()=>snd(784,.15,'sine',.1),140);
     document.getElementById('winP').innerHTML=
-      `МА ${force}x ≥ ${LV.need}x — верно!<br>${cargoWeight}кг ÷ ${pullForce}кг = ${(cargoWeight/pullForce).toFixed(1)}:1`+
+      `МА ${force}x ≥ ${LV.need}x — верно!<br>`+
+      `${cargoWeight}кг ÷ ${pullForce}кг = ${(cargoWeight/pullForce).toFixed(1)}:1<br>`+
+      (LV.need<=1?`Канат направлен через блок — МА = 1x`:`Подвижных блоков на канате: ${force-1}`)+
       (stars2.has(curLv)?'<br>⭐':'' );
     document.getElementById('win').style.opacity='1';
     document.getElementById('win').style.pointerEvents='auto';
@@ -336,7 +341,7 @@ function showHelp(){
   h.innerHTML=`
     <h1>⚓ Как играть — Rig Master</h1>
     <h3>Суть</h3>
-    <p>Задачи по механике. Груз весит X кг, вы тянете с силой Y кг. Чтобы поднять груз, нужен <b>рычаг</b> или <b>полиспаст</b>.</p>
+    <p>Задачи по механике. Груз весит X кг, вы тянете с силой Y кг. Чтобы поднять груз, нужен <b>полиспаст</b> из подвижных и фиксированных блоков.</p>
     <h3>Формула механического преимущества</h3>
     <p style="font-size:14px;color:#5f5;margin:6px 0;font-family:monospace;background:rgba(0,255,0,.05);padding:6px;border-radius:4px;text-align:center">
       МА = Вес груза ÷ Сила тяги<br>
@@ -371,7 +376,7 @@ function hideHelp(){document.getElementById('help').style.display='none'}
 
 function showMenu(){
   const m=document.getElementById('menu');
-  let h='<h1>⚓ Rig Master</h1><h2>100 задач по механике · рычаги · полиспасты</h2>';
+  let h='<h1>⚓ Rig Master</h1><h2>100 задач по механике · блоки · полиспасты</h2>';
   CATS.forEach(([a,b,nm])=>{
     let catDone=0;for(let i=a;i<=b;i++)if(done.has(i))catDone++;
     const pct=Math.round(catDone/10*100);
@@ -451,14 +456,15 @@ function oMove(e){
 
 function oUp(){
   if(cRope.length>=2){
-    const prevForce=force;
-    ropes.push([...cRope]);calcF();snd(440,.08,'triangle',.05);
-    const vUsed=new Set();
-    ropes.forEach(r=>r.forEach(p=>{if(p.bl&&LV.blk[p.bi]&&LV.blk[p.bi].tp==='v')vUsed.add(p.bi)}));
-    vUsed.forEach(bi=>{
-      const b=LV.blk[bi];
-      particles.push({x:b.x+b.w/2,y:b.y-12,vx:0,vy:-.6,life:1.2,r:0,
-        text:'+0',col:'#88b',font:'bold 10px sans-serif'});
+    const lastRope=[...cRope];
+    ropes.push(lastRope);calcF();snd(440,.08,'triangle',.05);
+    lastRope.forEach(p=>{
+      if(!p.bl)return;
+      const b=LV.blk[p.bi];
+      if(!b)return;
+      const isG=b.tp==='h';
+      particles.push({x:b.x+b.w/2,y:b.y-14,vx:0,vy:-.7,life:1.4,r:0,
+        text:isG?'+1 МА':'+0',col:isG?'#5f5':'#88b',font:'bold '+(isG?'11':'9')+'px sans-serif'});
     });
     if(force<LV.need){
       attempts++;
@@ -612,6 +618,12 @@ function drawCargo(){
   X.beginPath();X.arc(cargo.tx,cargo.ty,9+Math.sin(phase*3)*2,0,Math.PI*2);
   X.strokeStyle=`rgba(255,70,70,${.25+Math.sin(phase*3)*.1})`;X.lineWidth=1.5;
   X.setLineDash([3,3]);X.stroke();X.setLineDash([]);
+  if(LV&&cargo.ty<cargo.y-20){
+    X.save();X.translate(cargo.tx,cargo.ty-14);
+    X.fillStyle=`rgba(255,80,80,${.3+Math.sin(phase*3)*.15})`;
+    X.beginPath();X.moveTo(0,0);X.lineTo(-4,-6);X.lineTo(4,-6);X.closePath();X.fill();
+    X.restore();
+  }
 }
 
 function drawChains(){

@@ -1,0 +1,64 @@
+"""CV Tests — main runner. Запуск всех тестов для 3 игр."""
+
+import sys
+import os
+
+# Add cv_tests to path
+sys.path.insert(0, os.path.dirname(__file__))
+
+from tests.cosmic_bubbles import run_all as run_cb
+from tests.shatter_zone import run_all as run_sz
+from tests.rig_master import run_all as run_rm
+from results import TestSuite
+
+
+def main():
+    print("\n" + "=" * 60)
+    print("  CV Test Runner — Cosmic Bubbles + Shatter Zone + Rig Master")
+    print("=" * 60)
+    print("\n  Dependencies:")
+    print("    pip install opencv-python pytesseract numpy Pillow")
+    print("    + Tesseract OCR (https://github.com/tesseract-ocr/tesseract)")
+    print()
+
+    all_results = {}
+
+    # Run each game suite
+    for name, run_fn in [("Cosmic Bubbles", run_cb),
+                         ("Shatter Zone", run_sz),
+                         ("Rig Master", run_rm)]:
+        print(f"\n--- {name} ---")
+        try:
+            summary = run_fn()
+            all_results[name] = summary
+        except Exception as e:
+            print(f"  ERROR running {name}: {e}")
+            all_results[name] = {"error": str(e)}
+
+    # Combined report
+    print("\n" + "=" * 60)
+    print("  COMBINED REPORT")
+    print("=" * 60)
+    total = passed = failed = skipped = 0
+    for name, s in all_results.items():
+        if "error" in s:
+            print(f"  {name}: ERROR — {s['error']}")
+            continue
+        t = s.get("total", 0)
+        p = s.get("passed", 0)
+        f = s.get("failed", 0)
+        sk = s.get("skipped", 0)
+        total += t
+        passed += p
+        failed += f
+        skipped += sk
+        rate = s.get("pass_rate", "N/A")
+        print(f"  {name}: {t} total | {p} passed | {f} failed | {sk} skipped | rate: {rate}")
+    print(f"\n  TOTAL: {total} tests | {passed} passed | {failed} failed | {skipped} skipped")
+    if total:
+        print(f"  OVERALL PASS RATE: {passed/total*100:.1f}%")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    main()

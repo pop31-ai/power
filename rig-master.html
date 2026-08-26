@@ -287,6 +287,7 @@ function loadLevel(n){
   document.getElementById('pData').innerHTML=`Груз: <b>${cargoWeight}кг</b> · Сила: <b>${pullForce}кг</b> · МА: <b>${LV.need}x</b> · В: <b>${nFixData}</b> · Г: <b>${LV.nBlocks-nFixData}</b>`;
   document.getElementById('pHint').style.display='none';
   document.getElementById('overlay').style.opacity='0';
+  document.getElementById('overlay').style.pointerEvents='none';
   document.getElementById('win').style.opacity='0';
   document.getElementById('win').style.pointerEvents='none';
   hideMenu();hideHelp();

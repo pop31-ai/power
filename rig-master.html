@@ -62,11 +62,12 @@ canvas{display:block}
   <div class="hc">Сила: <b id="hS">?</b>кг</div>
   <div class="hc">МА: <b id="hMA">1</b>x</div>
   <div class="hc">Нужно: <b id="hNeed">?</b>x</div>
+  <div class="hc" id="hGBlock">Г: <b>0</b>/<span>0</span></div>
 </div>
 <div id="panel"><div class="task" id="pTask">Загрузка...</div><div class="desc" id="pDesc"></div><div class="formula" id="pFormula"></div><div class="data" id="pData"></div><div class="hint" id="pHint" onclick="showHint()">💡 Подсказка</div></div>
 <canvas id="c"></canvas>
 <div id="info">ЛКМ: клик на A → через блоки → клик на B · ПКМ: удалить · Space: заново · M: меню · H: справка</div>
-<div id="overlay"><h1>⚓ RIG MASTER</h1><p>100 задач по физике: рычаги, полиспасты, блоки<br><span style="opacity:.4">нажмите чтобы начать</span></p><p style="margin-top:8px;opacity:.3;font-size:10px">H — инструкция</p></div>
+<div id="overlay"><h1>⚓ RIG MASTER</h1><p>100 задач по физике: рычаги, полиспасты, блоки<br><span style="opacity:.6">нажмите чтобы выбрать задачу</span></p><p style="margin-top:8px;opacity:.3;font-size:10px">H — инструкция · M — меню</p></div>
 <div id="win"><h2>✓ ПРАВИЛЬНО!</h2><p id="winP"></p><div class="next" id="wNext">Следующая задача →</div></div>
 <div id="menu"></div>
 <div id="help"></div>
@@ -91,6 +92,7 @@ let complete=false;
 let particles=[],stars=[];
 let cargoWeight=50,pullForce=50;
 let hintShown=false;
+let attempts=0;
 
 function initStars(){stars=[];for(let i=0;i<50;i++)stars.push({x:Math.random()*W,y:Math.random()*H*.3,r:.2+Math.random()*.7,a:Math.random()*6.28,s:.002+Math.random()*.005})}
 initStars();
@@ -238,7 +240,7 @@ function genLevel(n){
 function loadLevel(n){
   curLv=n;LV=genLevel(n);
   ropes=[];cRope=[];dragging=false;
-  force=1;complete=false;particles=[];gameOn=true;hintShown=false;
+  force=1;complete=false;particles=[];gameOn=true;hintShown=false;attempts=0;
   wind=LV.windBase;
 
   const cc=LV.cargo;
@@ -290,13 +292,19 @@ function calcF(){
   force=Math.max(1,1+nBlocksUsed);
   if(force>old&&force>=LV.need)snd(1047,.15,'triangle',.08);
   document.getElementById('hMA').textContent=force;
+  const gEl=document.getElementById('hGBlock');
+  const needG=Math.max(0,LV.need-1);
+  gEl.innerHTML=`Г: <b>${nBlocksUsed}</b>/${needG}`;
+  gEl.style.color=nBlocksUsed>=needG?'#5f5':'#7bf';
   checkWin();
 }
 
 function checkWin(){
   if(!cargo||complete||!gameOn)return;
+  let hasBlock=false;
+  ropes.forEach(r=>{if(r.some(p=>p.bl))hasBlock=true});
   const d=Math.hypot(cargo.x-cargo.tx,cargo.y-cargo.ty);
-  if(d<35&&force>=LV.need){
+  if(d<35&&force>=LV.need&&hasBlock){
     complete=true;
     done.add(curLv);stars2.add(curLv);saveD();
     snd(523,.1,'sine',.08);setTimeout(()=>snd(659,.1,'sine',.08),70);
@@ -338,6 +346,8 @@ function showHelp(){
     </div>
     <h3>Цвета блоков</h3>
     <p><span style="color:#6d6">■ Г</span> (зелёный) — подвижный, добавляет МА · <span style="color:#88b">■ В</span> (синий) — фиксированный, только направление</p>
+    <h3>Индикатор Г-блоков</h3>
+    <p>В HUD отображается <b>Г: X/Y</b> — сколько подвижных блоков на канате из нужного минимума. Подсказка появляется автоматически после 2 неудачных попыток.</p>
     <h3>Цвет каната</h3>
     <p><span style="color:#5a5">Зелёный</span> = мало · <span style="color:#da3">Жёлтый</span> = норма · <span style="color:#a33">Красный</span> = макс. блоков</p>
     <div class="close" onclick="document.getElementById('help').style.display='none'">Понятно</div>`;
@@ -392,13 +402,13 @@ cv.addEventListener('contextmenu',e=>{e.preventDefault();if(cRope.length>0){cRop
 cv.addEventListener('touchstart',e=>{e.preventDefault();aud();oDown(e)},{passive:false});
 cv.addEventListener('touchmove',e=>{e.preventDefault();oMove(e)},{passive:false});
 cv.addEventListener('touchend',e=>{e.preventDefault();oUp(e)},{passive:false});
-cv.addEventListener('click',()=>{if(!gameOn){showHelp();gameOn='help'}});
+cv.addEventListener('click',()=>{if(!gameOn){showMenu();gameOn='menu'}});
 
 function near(p,list,r){let b=-1,bd=r;list.forEach((a,i)=>{const d=Math.hypot(p.x-a.x,p.y-a.y);if(d<bd){bd=d;b=i}});return b}
 
 function oDown(e){
   const p=getP(e);
-  if(complete||!gameOn||gameOn==='help'||!LV)return;
+  if(complete||!gameOn||gameOn==='menu'||!LV)return;
   const ai=near(p,LV.anch,20);
   if(ai>=0){
     if(e.button===2||e.ctrlKey){
@@ -410,7 +420,7 @@ function oDown(e){
     dragging=true;snd(600,.05,'sine',.06);return;
   }
   const bc=LV.blk.map(b=>({x:b.x+b.w/2,y:b.y+b.h/2}));
-  const bi=near(p,bc,26);
+  const bi=near(p,bc,32);
   if(bi>=0){
     const b=LV.blk[bi];
     cRope.push({x:b.x+b.w/2,y:b.y+b.h/2,bi,bl:true});
@@ -426,7 +436,13 @@ function oMove(e){
 }
 
 function oUp(){
-  if(cRope.length>=2){ropes.push([...cRope]);calcF();snd(440,.08,'triangle',.05)}
+  if(cRope.length>=2){
+    ropes.push([...cRope]);calcF();snd(440,.08,'triangle',.05);
+    if(force<LV.need){
+      attempts++;
+      if(attempts>=2&&!hintShown)showHint();
+    }
+  }
   cRope=[];dragging=false;
 }
 
@@ -599,7 +615,7 @@ function draw(){
   if(complete)X.fillStyle='rgba(0,0,0,.25)',X.fillRect(0,0,W,H);
 }
 
-function loop(){if(gameOn&&gameOn!=='help')update();draw();requestAnimationFrame(loop)}
+function loop(){if(gameOn&&gameOn!=='menu')update();draw();requestAnimationFrame(loop)}
 
 showMenu();loop();
 </script>

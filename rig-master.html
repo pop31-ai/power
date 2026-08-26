@@ -122,36 +122,29 @@ function getPhysicsTask(n){
   let w,pull,minMA,nBlocks;
 
   if(d===0){
-    // 1-10: Фиксированный блок (только направление)
-    w=RI(30,80); pull=w; minMA=1; nBlocks=RI(1,3);
+    w=RI(30,80); pull=w; nBlocks=RI(1,3);
   } else if(d===1){
-    // 11-20: Несколько фиксированных блоков (направление + угол)
-    w=RI(40,100); pull=w; minMA=1; nBlocks=RI(2,4);
+    w=RI(40,100); pull=w; nBlocks=RI(2,4);
   } else if(d===2){
-    // 21-30: Подвижные блоки (2:1)
-    w=RI(80,160); pull=RI(40,60); minMA=2; nBlocks=RI(2,4);
+    w=RI(80,160); pull=RI(40,60); nBlocks=RI(2,4);
   } else if(d===3){
-    // 31-40: Тали (3:1)
-    w=RI(100,200); pull=RI(35,60); minMA=3; nBlocks=RI(3,5);
+    w=RI(100,200); pull=RI(35,60); nBlocks=RI(3,5);
   } else if(d===4){
-    // 41-50: Полиспасты (4:1)
-    w=RI(150,300); pull=RI(35,55); minMA=4; nBlocks=RI(4,6);
+    w=RI(150,300); pull=RI(35,55); nBlocks=RI(4,6);
   } else if(d===5){
-    // 51-60: Составные (5:1 - 6:1)
-    w=RI(200,400); pull=RI(35,55); minMA=RI(4,6); nBlocks=RI(4,7);
+    w=RI(200,400); pull=RI(35,55); nBlocks=RI(4,7);
   } else if(d===6){
-    // 61-70: Судовые снасти (5:1 - 7:1)
-    w=RI(250,500); pull=RI(30,50); minMA=RI(5,8); nBlocks=RI(5,8);
+    w=RI(250,500); pull=RI(30,50); nBlocks=RI(5,8);
   } else if(d===7){
-    // 71-80: Грузоподъёмные (6:1 - 10:1)
-    w=RI(300,600); pull=RI(30,50); minMA=RI(6,10); nBlocks=RI(6,9);
+    w=RI(300,600); pull=RI(30,50); nBlocks=RI(6,9);
   } else if(d===8){
-    // 81-90: Экспертные (8:1 - 12:1)
-    w=RI(400,800); pull=RI(30,45); minMA=RI(8,12); nBlocks=RI(7,10);
+    w=RI(400,800); pull=RI(30,45); nBlocks=RI(7,10);
   } else {
-    // 91-100: Мастер (10:1 - 15:1)
-    w=RI(500,1000); pull=RI(25,40); minMA=RI(10,15); nBlocks=RI(8,10);
+    w=RI(500,1000); pull=RI(25,40); nBlocks=RI(8,10);
   }
+
+  minMA=Math.max(1,Math.ceil(w/pull));
+  if(minMA>nBlocks+1)minMA=nBlocks+1;
 
   cargoWeight=w; pullForce=pull;
 
@@ -159,11 +152,9 @@ function getPhysicsTask(n){
     `Поднять ${w}кг ${sc.up}`,
     `Опустить ${w}кг ${sc.down}`,
     `Сдвинуть ${w}кг ${sc.dir}`,
-    `Натянуть ${rig()} ${w}кг`,
+    `Натянуть ${sc.rig} ${w}кг`,
     `Переместить ${w}кг через ${sc.loc}`
   ];
-
-  const rig=()=>sc.rig;
 
   const descLines=[
     `Груз весит ${w}кг. Вы можете тянуть с силой ${pull}кг.`,
@@ -283,7 +274,7 @@ function checkWin(){
   const d=Math.hypot(cargo.x-cargo.tx,cargo.y-cargo.ty);
   if(d<35&&force>=LV.need){
     complete=true;
-    done.add(curLv);if(force>=LV.need)stars2.add(curLv);saveD();
+    done.add(curLv);stars2.add(curLv);saveD();
     snd(523,.1,'sine',.08);setTimeout(()=>snd(659,.1,'sine',.08),70);
     setTimeout(()=>snd(784,.15,'sine',.1),140);
     document.getElementById('winP').innerHTML=
@@ -418,27 +409,16 @@ function update(){
   if(!cargo)return;
 
   let fx=0,fy=0;
-  const weightFactor=Math.max(.1,1-cargoWeight/500);
-  ropes.forEach(r=>{
-    if(r.length<2)return;
-    const sp=r[0];
-    const ds=Math.hypot(cargo.x-sp.x,cargo.y-sp.y);
-    if(ds>80)return;
-    const ep=r[r.length-1];
-    const edx=ep.x-sp.x,edy=ep.y-sp.y;
-    const el=Math.hypot(edx,edy);
-    if(el>1){
-      const ps=force*.15*weightFactor;
-      fx+=edx/el*ps;fy+=edy/el*ps;
+  if(force>=LV.need&&ropes.length>0){
+    const tx=cargo.tx-cargo.x,ty=cargo.ty-cargo.y;
+    const dist=Math.hypot(tx,ty);
+    if(dist>5){
+      const speed=.03*(force/Math.max(1,LV.need))/(.5+cargoWeight/200);
+      fx=tx/dist*speed;fy=ty/dist*speed;
     }
-  });
-
-  if(ropes.length>0){
-    fx+=(cargo.tx-cargo.x)*.002*force*weightFactor;
-    fy+=(cargo.ty-cargo.y)*.002*force*weightFactor;
   }
-  fx+=wind*.005;
-  fy+=.02+Math.sin(phase*2)*.002;
+  fx+=wind*.003;
+  fy+=.015+Math.sin(phase*2)*.001;
   cargo.vx+=fx;cargo.vy+=fy;
   cargo.vx*=.86;cargo.vy*=.86;
   cargo.x+=cargo.vx;cargo.y+=cargo.vy;
@@ -503,7 +483,7 @@ function drawShip(){
 function drawBlock(b){
   X.save();X.translate(b.x+b.w/2,b.y+b.h/2);
   X.beginPath();X.roundRect(-b.w/2,-b.h/2,b.w,b.h,2);
-  X.fillStyle='#222230';X.fill();X.strokeStyle=force>=LV?.need?'#5a5':'#555568';X.lineWidth=1.5;X.stroke();
+  X.fillStyle='#222230';X.fill();  X.strokeStyle=force>=LV.need?'#5a5':'#555568';X.lineWidth=1.5;X.stroke();
   X.beginPath();X.arc(0,0,b.r,0,Math.PI*2);X.strokeStyle='#6a6a7a';X.lineWidth=1.5;X.stroke();
   X.beginPath();X.arc(0,0,2,0,Math.PI*2);X.fillStyle='#999';X.fill();
   X.fillStyle='#5a7a9a';X.font='7px sans-serif';X.textAlign='center';

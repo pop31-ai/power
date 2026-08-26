@@ -94,6 +94,7 @@ let cargoWeight=50,pullForce=50;
 let hintShown=false;
 let attempts=0;
 let longPressTimer=null;
+let demoMode=false,demoStep=0,demoTimer=0;
 
 function initStars(){stars=[];for(let i=0;i<50;i++)stars.push({x:Math.random()*W,y:Math.random()*H*.3,r:.2+Math.random()*.7,a:Math.random()*6.28,s:.002+Math.random()*.005})}
 initStars();
@@ -256,7 +257,7 @@ function genLevel(n){
   return{n,cat:Math.min(d,9),blk,anch,ship,
     goal:task.goal,desc:task.desc,formula:task.formula,hint:task.hint,
     need:task.need,nBlocks:task.nBlocks,
-    cargo:{x:s.x,y:deckY-16,wt:task.w,tx:isLift?mx:s.x+(W*.3),ty:isLift?beamY1+20:deckY-30},
+    cargo:{x:s.x,y:deckY-16,wt:task.w,tx:isLift?mx:s.x+(W*.3),ty:isLift?beamY1+20:beamY1+10},
     windBase:R(-.3,.3)};
 }
 
@@ -265,6 +266,7 @@ function loadLevel(n){
   ropes=[];cRope=[];dragging=false;
   force=1;complete=false;particles=[];gameOn=true;hintShown=false;attempts=0;
   wind=LV.windBase;
+  demoMode=(n===1&&!done.has(1));demoStep=0;demoTimer=0;
 
   const cc=LV.cargo;
   cargo={x:cc.x,y:cc.y,vx:0,vy:0,wt:cc.wt,r:10+Math.min(cc.wt/25,5),tx:cc.tx,ty:cc.ty};
@@ -349,6 +351,15 @@ function showHelp(){
     <h1>⚓ Как играть — Rig Master</h1>
     <h3>Суть</h3>
     <p>Задачи по механике. Груз весит X кг, вы тянете с силой Y кг. Чтобы поднять груз, нужен <b>полиспаст</b> из подвижных и фиксированных блоков.</p>
+    <h3>Пошагово</h3>
+    <p style="background:rgba(255,255,255,.05);padding:8px;border-radius:4px;line-height:1.8">
+      <b>1.</b> Кликните на <span style="color:#5d5">■ якорь A</span> (слева)<br>
+      <b>2.</b> Тянете мышь вверх к <span style="color:#88b">■ блоку</span> на мачте<br>
+      <b>3.</b> Кликните на блок — канат привязывается<br>
+      <b>4.</b> Тянете к <span style="color:#d55">■ якорю B</span> (справа)<br>
+      <b>5.</b> Кликните на B — канат готов!<br>
+      <b>6.</b> Если МА ≥ нужно → груз поднимается → ПРАВИЛЬНО!
+    </p>
     <h3>Формула механического преимущества</h3>
     <p style="font-size:14px;color:#5f5;margin:6px 0;font-family:monospace;background:rgba(0,255,0,.05);padding:6px;border-radius:4px;text-align:center">
       МА = Вес груза ÷ Сила тяги<br>
@@ -356,13 +367,11 @@ function showHelp(){
     </p>
     <h3>Типы блоков</h3>
     <ul>
-      <li><b>Фиксированный</b> (В) — крепится к перекладине. Канат проходит через него для направления, но <b>не добавляет</b> МА.</li>
-      <li><b>Подвижный</b> (Г) — крепится к грузу. Каждый +1 к МА.</li>
-      <li><b>Полиспаст</b> — чередование фиксированных и подвижных блоков.</li>
+      <li><b><span style="color:#88b">■ В</span> Фиксированный</b> — крепится к перекладине. Канат проходит через него для направления, но <b>не добавляет</b> МА.</li>
+      <li><b><span style="color:#6d6">■ Г</span> Подвижный</b> — крепится к грузу. Каждый +1 к МА.</li>
     </ul>
-    <h3>Как строить полиспаст</h3>
-    <p>Канат: груз → подвижный блок → фиксированный → подвижный → фиксированный → тянете.</p>
-    <p>Каждая петля через подвижный блок = +1 МА. Чем сложнее система — тем легче поднять тяжёлый груз.</p>
+    <h3>Цвет каната</h3>
+    <p><span style="color:#5a5">■ Зелёный</span> = МА достигнуто · <span style="color:#da3">■ Жёлтый</span> = приближаетесь · <span style="color:#a33">■ Красный</span> = нужно больше блоков</p>
     <h3>Управление</h3>
     <div class="keys">
       <div class="key">ЛКМ — клик на A, тяни, клик на B</div>
@@ -370,12 +379,6 @@ function showHelp(){
       <div class="key">Space — начать заново</div>
       <div class="key">M — меню · H — справка</div>
     </div>
-    <h3>Цвета блоков</h3>
-    <p><span style="color:#6d6">■ Г</span> (зелёный) — подвижный, добавляет МА · <span style="color:#88b">■ В</span> (синий) — фиксированный, только направление</p>
-    <h3>Индикатор Г-блоков</h3>
-    <p>В HUD отображается <b>Г: X/Y</b> — сколько подвижных блоков на канате из нужного минимума. Подсказка появляется автоматически после 2 неудачных попыток.</p>
-    <h3>Цвет каната</h3>
-    <p><span style="color:#5a5">Зелёный</span> = мало · <span style="color:#da3">Жёлтый</span> = норма · <span style="color:#a33">Красный</span> = макс. блоков</p>
     <div class="close" onclick="document.getElementById('help').style.display='none'">Понятно</div>`;
   h.style.display='block';
 }
@@ -440,6 +443,7 @@ function near(p,list,r){let b=-1,bd=r;list.forEach((a,i)=>{const d=Math.hypot(p.
 function oDown(e){
   const p=getP(e);
   if(complete||!gameOn||gameOn==='menu'||!LV)return;
+  if(demoMode){demoMode=false;demoStep=0}
   const ai=near(p,LV.anch,20);
   if(ai>=0){
     if(e.button===2||e.ctrlKey){
@@ -506,6 +510,27 @@ function update(){
   wind+=Math.sin(windPhase)*.002;
   wind=Math.max(-1,Math.min(1,wind));
   if(complete)return;
+
+  if(demoMode){
+    demoTimer++;
+    if(demoTimer>180&&demoStep===0){
+      demoStep=1;demoTimer=0;
+    }
+    if(demoStep===1&&demoTimer>60){
+      const a=LV.anch[0],b=LV.blk[0];
+      if(a&&b){cRope=[{x:a.x,y:a.y,ai:0,an:true},{x:b.x+b.w/2,y:b.y+b.h/2,bi:0,bl:true}];dragging=true}
+      demoStep=2;demoTimer=0;
+    }
+    if(demoStep===2&&demoTimer>40){
+      const b=LV.blk[0],a=LV.anch[1];
+      if(b&&a){cRope.push({x:a.x,y:a.y,ai:1,an:true});ropes.push([...cRope]);cRope=[];dragging=false;calcF()}
+      demoStep=3;demoTimer=0;
+    }
+    if(demoStep===3&&demoTimer>80){
+      demoMode=false;demoStep=0;
+    }
+    return;
+  }
   if(!cargo)return;
 
   let fx=0,fy=0;
@@ -618,8 +643,8 @@ function drawRope(r,col){
   if(r.length<2)return;
   X.save();X.lineCap='round';X.lineJoin='round';
   const tens=Math.min(1,force/Math.max(1,LV?LV.need:1));
-  const tCol=col||(tens<.33?`rgb(${60+tens*300},${180-tens*200},60)`:
-    tens<.66?`rgb(220,${180-tens*150},30)`:`rgb(255,${60-tens*40},30)`);
+  const tCol=col||(force>=LV?.35?`rgb(80,${180+tens*40},80)`:
+    tens<.5?`rgb(220,${80+tens*100},30)`:`rgb(255,${140-tens*80},30)`);
   X.strokeStyle=tCol;X.lineWidth=2.5;X.shadowColor=tCol;X.shadowBlur=tens>.5?6:2;
   X.beginPath();X.moveTo(r[0].x,r[0].y);
   for(let i=1;i<r.length;i++){
@@ -699,6 +724,17 @@ function draw(){
   ropes.forEach(r=>drawRope(r));
   if(cRope.length>0)drawRope(cRope,'#ff8');
   drawCargo();drawBar();
+  if(demoMode&&LV){
+    const a=LV.anch[0];
+    if(a){
+      const pulse=.5+.5*Math.sin(phase*4);
+      X.save();X.globalAlpha=pulse;
+      X.fillStyle='#ff0';X.font='bold 14px sans-serif';X.textAlign='center';
+      X.fillText('👆 Кликни сюда!',a.x,a.y-28);
+      X.beginPath();X.moveTo(a.x,a.y-18);X.lineTo(a.x-8,a.y-10);X.lineTo(a.x+8,a.y-10);X.closePath();X.fill();
+      X.restore();
+    }
+  }
   particles.forEach(p=>{
     if(p.text){
       X.globalAlpha=Math.min(1,p.life);

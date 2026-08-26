@@ -349,6 +349,7 @@ function popBubble(b) {
 }
 
 function checkWin() {
+  if (won || gameOver) return;
   const alive = blocks.filter(b => b.alive).length;
   if (alive === 0) {
     won = true;
@@ -356,7 +357,7 @@ function checkWin() {
     ui.lvlTxt.textContent = 'LEVEL CLEAR!';
     ui.lvlTxt.style.opacity = 1;
     setTimeout(() => { ui.lvlTxt.style.opacity = 0; }, 1500);
-    setTimeout(() => { level++; genLevel(level); }, 1800);
+    setTimeout(() => { level++; won = false; genLevel(level); }, 1800);
   } else if (shots <= 0 && bubbles.filter(b => b.alive).length === 0) {
     gameOver = true;
     if (score > hiScore) {
